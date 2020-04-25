@@ -2,10 +2,17 @@
 
 namespace addons\XyStore\merchant\modules\order\controllers;
 
-use addons\XyStore\common\enums\DecimalReservationEnum;
-use addons\XyStore\common\models\product\Product;
-use addons\XyStore\common\models\product\VirtualType;
-use addons\XyStore\common\models\SettingForm;
+use addons\XyStore\common\components\marketing\AfterHandler;
+use addons\XyStore\common\components\marketing\CouponHandler;
+use addons\XyStore\common\components\marketing\FeeHandler;
+use addons\XyStore\common\components\marketing\FullMailHandler;
+use addons\XyStore\common\components\marketing\UsePointHandler;
+use addons\XyStore\common\components\PreviewHandler;
+use addons\XyStore\common\components\InitOrderData;
+use addons\XyStore\common\models\forms\PreviewForm;
+use common\helpers\AddonHelper;
+use common\models\api\AccessToken;
+use common\models\forms\CreditsLogForm;
 use Yii;
 use yii\data\Pagination;
 use yii\db\ActiveQuery;
@@ -32,6 +39,31 @@ class OrderController extends BaseController
      * @var Order
      */
     public $modelClass = Order::class;
+
+    /**
+     * @var array
+     */
+    protected $handlers = [
+        FullMailHandler::class,// 满包邮
+        FeeHandler::class,// 运费计算
+        CouponHandler::class,// 优惠券
+        UsePointHandler::class,// 积分抵现
+        AfterHandler::class,// 统一处理
+    ];
+
+    /**
+     * 执行外部营销
+     *
+     * @var PreviewHandler
+     */
+    protected $previewHandler;
+
+    /**
+     * 订单预览
+     *
+     * @var \addons\XyStore\common\models\forms\PreviewForm
+     */
+    protected $previewForm;
 
     /**
      * 首页
@@ -338,86 +370,39 @@ class OrderController extends BaseController
      */
     public function actionCreate()
     {
-        $id = Yii::$app->request->get('id', null);
-        $virtual_group = Yii::$app->request->get('product_virtual_group');
-
-//        $model = $this->findFormModel($id);
-//        $model->tags = !empty($model->tags) ? explode(',', $model->tags) : [];
-//        $model->covers = unserialize($model->covers);
-        $model->defaultMemberDiscount = Yii::$app->xyStoreService->productMemberDiscount->getLevelListByProductId($id);
-        $model->member_level_decimal_reservation = $model->defaultMemberDiscount[0]['decimal_reservation_number'] ?? DecimalReservationEnum::DEFAULT;
-
-        /** @var VirtualType $virtualType 虚拟商品 */
-        $virtualType = $model->virtualType;
-        if (!$virtualType && $virtual_group) {
-            $virtualType = new VirtualType();
-            $virtualType = $virtualType->loadDefaultValues();
-            $virtualType->group = $virtual_group;
-            $virtualType->value = [];
-        }
-
-        // 分销配置
-//        $commissionRate = Yii::$app->xyStoreService->productCommissionRate->findModelByProductId($id);
-
-        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
-            $data = Yii::$app->request->post();
-            // 开启事务
+        $model = new Order();
+        if ($model->load(Yii::$app->request->post()))
+        {
             $transaction = Yii::$app->db->beginTransaction();
             try {
-                // 载入数据并验证
-                $model->skuData = $data['skus'] ?? [];
-                $model->attributeValueData = $data['attributeValue'] ?? [];
-                $model->specValueData = $data['specValue'] ?? [];
-                $model->specValueFieldData = $data['specValueFieldData'] ?? [];
-                $model->memberDiscount = $data[$model->formName()]['memberDiscount'] ?? [];
-                $model->ladderPreferentialData = $data[$model->formName()]['ladderPreferentialData'] ?? [];
-                // 分销载入
-//                $commissionRate->load($data);
-
-//                !empty($model->covers) && $model->covers = serialize($model->covers);
-//                !empty($model->tags) && $model->tags = implode(',', $model->tags);
-
-                // 分销开启状态
-//                $model->is_open_commission = $commissionRate->status;
-//                if (!$model->save()) {
-//                    throw new NotFoundHttpException($this->getError($model));
-//                }
-
-                // 分销
-//                $commissionRate->product_id = $model->id;
-//                if (!$commissionRate->save()) {
-//                    throw new NotFoundHttpException($this->getError($commissionRate));
-//                }
-
-                // 虚拟商品
-                if ($virtualType) {
-                    $virtualType->load($data);
-                    $virtualType->product_id = $model->id;
-                    $virtual = VirtualProductGroupEnum::getModel($virtualType->group, $data);
-                    if (!$virtual->validate()) {
-                        throw new NotFoundHttpException($this->getError($virtual));
-                    }
-
-                    $virtual = \yii\helpers\ArrayHelper::toArray($virtual);
-                    unset($virtual['period'], $virtual['confine_use_number']);
-                    $virtualType->value = $virtual;
-
-                    if (!$virtualType->save()) {
-                        throw new NotFoundHttpException($this->getError($virtualType));
-                    }
+                // 订单来源
+                $model->order_from = Yii::$app->user->identity->group;
+                //$order = Yii::$app->xyStoreService->order->create($model);
+                if ($model->save()) {
+                    //return $this->redirect(['view', 'id' => $model->id]);
+                }
+                // 消耗积分
+                if ($order->point > 0) {
+                    Yii::$app->services->memberCreditsLog->decrInt(new CreditsLogForm([
+                        'member' => $model->member,
+                        'num' => $order->point,
+                        'credit_group' => 'orderCreate',
+                        'map_id' => $order->id,
+                        'remark' => '【门店】订单支付',
+                    ]));
                 }
 
                 $transaction->commit();
-
-                return ResultHelper::json(200, '操作成功');
+                return $this->render('create', [
+                    'model' => $model,
+                ]);
             } catch (\Exception $e) {
                 $transaction->rollBack();
 
                 return ResultHelper::json(422, $e->getMessage());
             }
         }
-
-        return $this->render($this->action->id, [
+        return $this->render('create', [
             'model' => $model,
         ]);
     }

@@ -1,11 +1,9 @@
 <?php
 
-namespace addons\TinyShop\common\models\order;
-
-use common\behaviors\MerchantBehavior;
+namespace addons\XyStore\common\models\order;
 
 /**
- * This is the model class for table "{{%addon_shop_order_customer}}".
+ * This is the model class for table "{{%addon_store_order_customer}}".
  *
  * @property string $id 主键id
  * @property int $merchant_id 店铺ID
@@ -53,7 +51,7 @@ class Customer extends \common\models\base\BaseModel
      */
     public static function tableName()
     {
-        return '{{%addon_shop_order_customer}}';
+        return '{{%addon_store_order_customer}}';
     }
 
     /**
@@ -127,5 +125,14 @@ class Customer extends \common\models\base\BaseModel
     public function getOrder()
     {
         return $this->hasOne(Order::class, ['id' => 'order_id']);
+    }
+
+    /**
+     * @param bool $insert
+     * @param array $changedAttributes
+     */
+    public function afterSave($insert, $changedAttributes)
+    {
+        parent::afterSave($insert, $changedAttributes);
     }
 }
