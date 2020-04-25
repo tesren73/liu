@@ -1,9 +1,9 @@
 <?php
 
-namespace addons\TinyShop\common\models\order;
+namespace addons\XyStore\common\models\order;
 
 /**
- * This is the model class for table "{{%addon_shop_order_pickup}}".
+ * This is the model class for table "{{%addon_store_order_pickup}}".
  *
  * @property string $id
  * @property int $order_id 订单ID
@@ -36,7 +36,7 @@ class Pickup extends \common\models\base\BaseModel
      */
     public static function tableName()
     {
-        return '{{%addon_shop_order_pickup}}';
+        return '{{%addon_store_order_pickup}}';
     }
 
     /**

@@ -1,17 +1,17 @@
 <?php
 
-namespace addons\TinyShop\merchant\modules\order\controllers;
+namespace addons\XyStore\merchant\modules\order\controllers;
 
 use Yii;
-use addons\TinyShop\common\models\order\Invoice;
+use addons\XyStore\common\models\order\Invoice;
 use common\traits\MerchantCurd;
 use common\enums\StatusEnum;
 use common\models\base\SearchModel;
-use addons\TinyShop\merchant\controllers\BaseController;
+use addons\XyStore\merchant\controllers\BaseController;
 
 /**
  * Class OrderInvoiceController
- * @package addons\TinyShop\merchant\controllers
+ * @package addons\XyStore\merchant\controllers
  * @author jianyan74 <751393839@qq.com>
  */
 class InvoiceController extends BaseController

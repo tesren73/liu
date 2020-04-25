@@ -1,12 +1,12 @@
 <?php
 
-namespace addons\TinyShop\common\enums;
+namespace addons\XyStore\common\enums;
 
 use common\enums\BaseEnum;
 
 /**
  * Class AccessTokenGroupEnum
- * @package addons\TinyShop\common\enums
+ * @package addons\XyStore\common\enums
  * @author jianyan74 <751393839@qq.com>
  */
 class AccessTokenGroupEnum extends BaseEnum

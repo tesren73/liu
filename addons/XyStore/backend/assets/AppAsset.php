@@ -18,9 +18,11 @@ class AppAsset extends AssetBundle
     public $sourcePath = '@addons/XyStore/backend/resources/';
 
     public $css = [
+        'css/tinyshop.css',
     ];
 
     public $js = [
+        'js/tinyshop.js',
     ];
 
     public $depends = [

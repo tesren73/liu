@@ -5,11 +5,11 @@ use yii\widgets\LinkPager;
 use yii\widgets\ActiveForm;
 use common\enums\PayTypeEnum;
 use common\helpers\ImageHelper;
-use addons\TinyShop\common\enums\ShippingTypeEnum;
-use addons\TinyShop\common\enums\OrderStatusEnum;
-use addons\TinyShop\common\helpers\OrderHelper;
-use addons\TinyShop\common\enums\OrderTypeEnum;
-use addons\TinyShop\common\enums\AccessTokenGroupEnum;
+use addons\XyStore\common\enums\ShippingTypeEnum;
+use addons\XyStore\common\enums\OrderStatusEnum;
+use addons\XyStore\common\helpers\OrderHelper;
+use addons\XyStore\common\enums\OrderTypeEnum;
+use addons\XyStore\common\enums\AccessTokenGroupEnum;
 
 $addon = <<< HTML
 <span class="input-group-addon">
@@ -87,7 +87,7 @@ $this->params['breadcrumbs'][] = ['label' => $this->title];
                                     <small style="color: #999"><?= $model['product'][0]['sku_name']; ?></small>
                                 </td>
                                 <td>
-                                    <span class="pull-left"><?= $model['product'][0]['price']; ?>元 <?php if($model['product'][0]['adjust_money'] != 0) { ?>(调价：<?= $model['product'][0]['adjust_money']; ?>元)<?php } ?></span>
+                                    <span class="pull-left"><?= $model['product'][0]['product_money']; ?>元 <?php if($model['product'][0]['adjust_money'] != 0) { ?>(调价：<?= $model['product'][0]['adjust_money']; ?>元)<?php } ?></span>
                                     <span class="pull-right"><?= $model['product'][0]['num']; ?>件</span><br>
                                     <?= OrderHelper::refundOperation($model['product'][0]['id'], $model['product'][0]['refund_status'])?>
                                 </td>

@@ -1,17 +1,17 @@
 <?php
 
-namespace addons\TinyShop\merchant\modules\order\controllers;
+namespace addons\XyStore\merchant\modules\order\controllers;
 
 use Yii;
 use yii\web\NotFoundHttpException;
 use common\helpers\ArrayHelper;
-use addons\TinyShop\merchant\forms\DeliverProductForm;
-use addons\TinyShop\common\models\order\ProductExpress;
-use addons\TinyShop\merchant\controllers\BaseController;
+use addons\XyStore\merchant\forms\DeliverProductForm;
+use addons\XyStore\common\models\order\ProductExpress;
+use addons\XyStore\merchant\controllers\BaseController;
 
 /**
  * Class OrderProductExpressController
- * @package addons\TinyShop\merchant\controllers
+ * @package addons\XyStore\merchant\controllers
  * @author jianyan74 <751393839@qq.com>
  */
 class ProductExpressController extends BaseController
@@ -23,7 +23,7 @@ class ProductExpressController extends BaseController
      */
     public function actionCreate($id)
     {
-        $order = Yii::$app->tinyShopService->order->findById($id);
+        $order = Yii::$app->xyStoreService->order->findById($id);
         $model = new DeliverProductForm();
         $model = $model->loadDefaultValues();
         $model->order = $order;
@@ -42,6 +42,15 @@ class ProductExpressController extends BaseController
                     throw new NotFoundHttpException($this->getError($model));
                 }
 
+                // 记录操作
+                Yii::$app->xyStoreService->orderAction->create(
+                    '进行发货',
+                    $order->id,
+                    $order->order_status,
+                    Yii::$app->user->identity->id,
+                    Yii::$app->user->identity->username
+                );
+
                 $transaction->commit();
 
                 return $this->message('修改成功', $this->redirect(Yii::$app->request->referrer));
@@ -52,14 +61,14 @@ class ProductExpressController extends BaseController
             }
         }
 
-        $product = Yii::$app->tinyShopService->orderProductExpress->regroupProduct($product, $order->id);
+        $product = Yii::$app->xyStoreService->orderProductExpress->regroupProduct($product, $order->id);
         $model->express_company_id = $order->company_id;
 
         return $this->renderAjax($this->action->id, [
             'model' => $model,
             'order' => $order,
             'product' => $product,
-            'company' => Yii::$app->tinyShopService->expressCompany->getMapList(),
+            'company' => Yii::$app->xyStoreService->expressCompany->getMapList(),
             'shippingTypeExplain' => ProductExpress::$shippingTypeExplain,
         ]);
     }
@@ -83,7 +92,7 @@ class ProductExpressController extends BaseController
         return $this->renderAjax($this->action->id, [
             'model' => $model,
             'order' => $model->order,
-            'company' => Yii::$app->tinyShopService->expressCompany->getMapList(),
+            'company' => Yii::$app->xyStoreService->expressCompany->getMapList(),
             'shippingTypeExplain' => ProductExpress::$shippingTypeExplain,
         ]);
     }

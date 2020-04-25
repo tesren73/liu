@@ -1,11 +1,11 @@
 <?php
 
-namespace addons\TinyShop\common\models\order;
+namespace addons\XyStore\common\models\order;
 
 use common\models\member\Member;
 
 /**
- * This is the model class for table "{{%addon_shop_order_invoice}}".
+ * This is the model class for table "{{%addon_store_order_invoice}}".
  *
  * @property string $id
  * @property string $merchant_id 商户id
@@ -27,7 +27,7 @@ class Invoice extends \common\models\base\BaseModel
      */
     public static function tableName()
     {
-        return '{{%addon_shop_order_invoice}}';
+        return '{{%addon_store_order_invoice}}';
     }
 
     /**

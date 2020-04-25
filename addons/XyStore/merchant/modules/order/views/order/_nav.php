@@ -1,7 +1,7 @@
 <?php
 
 use common\helpers\Url;
-use addons\TinyShop\common\enums\OrderStatusEnum;
+use addons\XyStore\common\enums\OrderStatusEnum;
 
 $orderStatusMap = OrderStatusEnum::getMap();
 ?>

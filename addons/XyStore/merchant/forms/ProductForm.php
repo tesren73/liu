@@ -16,7 +16,7 @@ use addons\XyStore\common\enums\PointExchangeTypeEnum;
 
 /**
  * Class ProductForm
- * @package addons\TinyShop\merchant\forms
+ * @package addons\XyStore\merchant\forms
  * @author jianyan74 <751393839@qq.com>
  */
 class ProductForm extends \addons\XyStore\common\models\product\Product
@@ -50,17 +50,38 @@ class ProductForm extends \addons\XyStore\common\models\product\Product
     public $ladderPreferentialData = [];
 
     /**
+     * 会员折扣
+     *
+     * @var array
+     */
+    public $memberDiscount = [];
+
+    /**
+     * @var array
+     */
+    public $defaultMemberDiscount = [];
+
+    /**
+     * @var int
+     */
+    public $member_level_decimal_reservation;
+
+    /**
      * 规格值单独内容(颜色/图片)
      *
      * @var array
      */
     public $specValueFieldData = [];
 
+    /**
+     * @return array
+     */
     public function rules()
     {
         $rule = parent::rules();
 
         return ArrayHelper::merge($rule, [
+            ['member_level_decimal_reservation', 'integer'],
             [['is_attribute'], 'verifySku'],
             [['covers'], 'isEmpty'],
         ]);
@@ -129,17 +150,17 @@ class ProductForm extends \addons\XyStore\common\models\product\Product
 
             // 商品正常情况下删除到购物车
             if ($oldAttributes['status'] == StatusEnum::ENABLED && $this->status == StatusEnum::DISABLED) {
-                Yii::$app->xyStoreService->memberCartItem->loseByProductId($this->id);
+                Yii::$app->tinyShopService->memberCartItem->loseByProductIds([$this->id]);
             }
 
             // 商品上架情况下到下架
             if ($oldAttributes['product_status'] == self::PRODUCT_STATUS_PUTAWAY && self::PRODUCT_STATUS_SOLD_OUT == $this->product_status) {
-                Yii::$app->xyStoreService->memberCartItem->loseByProductId($this->id);
+                Yii::$app->tinyShopService->memberCartItem->loseByProductIds([$this->id]);
             }
 
             // 商品规格启用情况下到规格不启用
             if ($oldAttributes['is_attribute'] == StatusEnum::ENABLED && $this->is_attribute == StatusEnum::DISABLED) {
-                Yii::$app->xyStoreService->memberCartItem->loseByProductId($this->id);
+                Yii::$app->tinyShopService->memberCartItem->loseByProductIds([$this->id]);
                 // 删除sku
                 Sku::deleteAll(['product_id' => $this->id]);
                 // 删除规格、规格值
@@ -151,15 +172,15 @@ class ProductForm extends \addons\XyStore\common\models\product\Product
 
             // 商品规格不启用情况下到规格启用
             if ($oldAttributes['is_attribute'] == StatusEnum::DISABLED && $this->is_attribute == StatusEnum::ENABLED) {
-                Yii::$app->xyStoreService->memberCartItem->loseByProductId($this->id);
+                Yii::$app->tinyShopService->memberCartItem->loseByProductIds([$this->id]);
                 // 删除sku
                 Sku::deleteAll(['product_id' => $this->id]);
             }
         }
 
         // 更新系统主图
-//        $covers = unserialize($this->covers);
-//        $this->picture = $covers[0] ?? '';
+        $covers = unserialize($this->covers);
+        $this->picture = $covers[0] ?? '';
 
         // 非积分兑换
         if ($this->point_exchange_type == PointExchangeTypeEnum::NOT_EXCHANGE) {
@@ -191,17 +212,24 @@ class ProductForm extends \addons\XyStore\common\models\product\Product
             $this->updateAttributeValue();
         } else {
             // 更新sku
-            Yii::$app->xyStoreService->productSku->saveByProductId($this->id, $this->attributes);
+            Yii::$app->tinyShopService->productSku->saveByProductId($this->id, $this->attributes);
         }
 
         // 更新总库存
-        $stock = Yii::$app->xyStoreService->productSku->getStockByProductId($this->id);
+        $stock = Yii::$app->tinyShopService->productSku->getStockByProductId($this->id);
         // 更新规格、规格值
-        $specModel = Yii::$app->xyStoreService->productSpec->getListWithValue($this->id);
+        $specModel = Yii::$app->tinyShopService->productSpec->getListWithValue($this->id);
         // 更新记录最小sku
         $minPriceSku = $this->minPriceSku;
         // 更新阶梯优惠
-        Yii::$app->xyStoreService->productLadderPreferential->createByProductId($this->ladderPreferentialData, $this->id, $this->max_buy);
+        Yii::$app->tinyShopService->productLadderPreferential->create(
+            $this->ladderPreferentialData,
+            $this->id,
+            $this->max_buy,
+            $this->is_open_presell,
+            $this->point_exchange_type,
+            $minPriceSku['price']
+        );
 
         self::updateAll(
             [
@@ -233,7 +261,7 @@ class ProductForm extends \addons\XyStore\common\models\product\Product
         // 已有的参数信息
         $models = $this->attributeValue;
         // 系统模型的参数
-        $baseAttributeValue = Yii::$app->xyStoreService->baseAttributeValue->findByIds($ids);
+        $baseAttributeValue = Yii::$app->tinyShopService->baseAttributeValue->findByIds($ids);
         $baseAttributeValue = ArrayHelper::map($baseAttributeValue, 'id', 'title');
 
         /** @var AttributeValue $model */
@@ -338,7 +366,7 @@ class ProductForm extends \addons\XyStore\common\models\product\Product
         $deleteIds = [];
         $updatedIds = [];
         // 系统规格
-        $baseSpec = Yii::$app->xyStoreService->baseSpec->findByIds($specIds);
+        $baseSpec = Yii::$app->tinyShopService->baseSpec->findByIds($specIds);
         $tmpBaseSpec = [];
         foreach ($baseSpec as $item) {
             $tmpBaseSpec[$item['id']] = $item;
@@ -401,7 +429,7 @@ class ProductForm extends \addons\XyStore\common\models\product\Product
      */
     protected function updateSpecValue($valueIds, $valueData)
     {
-        $sysOptions = Yii::$app->xyStoreService->baseSpecValue->findByIds($valueIds);
+        $sysOptions = Yii::$app->tinyShopService->baseSpecValue->findByIds($valueIds);
         $sysOptions = ArrayHelper::map($sysOptions, 'id', 'title');
 
         $deleteIds = [];
@@ -465,7 +493,7 @@ class ProductForm extends \addons\XyStore\common\models\product\Product
         }
 
         // 查询所有的规格
-        $specValue = Yii::$app->xyStoreService->productSpecValue->getListByProductId($this->id);
+        $specValue = Yii::$app->tinyShopService->productSpecValue->getListByProductId($this->id);
         $specValue = ArrayHelper::arrayKey($specValue, 'base_spec_value_id');
 
         /** @var Sku $skuModels */
@@ -521,16 +549,16 @@ class ProductForm extends \addons\XyStore\common\models\product\Product
         }
 
         // 让购物车里面的sku失效
-//        if (!empty($deleteIds)) {
-//            // 删除失效的sku
-//            Sku::deleteAll([
-//                'and',
-//                ['product_id' => $this->id, 'merchant_id' => $this->merchant_id],
-//                ['in', 'id', $deleteIds],
-//            ]);
-//
-//            Yii::$app->xyStoreService->memberCartItem->loseBySkus($deleteIds);
-//        }
+        if (!empty($deleteIds)) {
+            // 删除失效的sku
+            Sku::deleteAll([
+                'and',
+                ['product_id' => $this->id, 'merchant_id' => $this->merchant_id],
+                ['in', 'id', $deleteIds],
+            ]);
+
+            Yii::$app->tinyShopService->memberCartItem->loseBySkus($deleteIds);
+        }
 
         unset($skuModels, $field, $rows);
     }

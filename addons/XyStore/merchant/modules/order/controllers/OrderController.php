@@ -2,16 +2,6 @@
 
 namespace addons\XyStore\merchant\modules\order\controllers;
 
-use addons\XyStore\common\components\marketing\AfterHandler;
-use addons\XyStore\common\components\marketing\CouponHandler;
-use addons\XyStore\common\components\marketing\FeeHandler;
-use addons\XyStore\common\components\marketing\FullMailHandler;
-use addons\XyStore\common\components\marketing\UsePointHandler;
-use addons\XyStore\common\components\PreviewHandler;
-use addons\XyStore\common\models\product\Product;
-use common\helpers\AddonHelper;
-use common\models\api\AccessToken;
-use common\models\forms\CreditsLogForm;
 use Yii;
 use yii\data\Pagination;
 use yii\db\ActiveQuery;
@@ -25,8 +15,6 @@ use addons\XyStore\common\enums\OrderStatusEnum;
 use addons\XyStore\common\enums\RefundStatusEnum;
 use addons\XyStore\merchant\forms\DeliverProductForm;
 use addons\XyStore\merchant\forms\PickupForm;
-use addons\XyStore\common\components\InitOrderData;
-use addons\XyStore\common\models\forms\PreviewForm;
 use addons\XyStore\merchant\controllers\BaseController;
 
 /**
@@ -37,70 +25,10 @@ use addons\XyStore\merchant\controllers\BaseController;
 class OrderController extends BaseController
 {
     /**
-     * @var \addons\XyStore\common\models\order\Order
+     * @var Order
      */
     public $modelClass = Order::class;
 
-    /**
-     * @var array
-     */
-    protected $handlers = [
-        FullMailHandler::class,// 满包邮
-        FeeHandler::class,// 运费计算
-        CouponHandler::class,// 优惠券
-        UsePointHandler::class,// 积分抵现
-        AfterHandler::class,// 统一处理
-    ];
-
-    /**
-     * 执行外部营销
-     *
-     * @var PreviewHandler
-     */
-    protected $previewHandler;
-
-    /**
-     * 订单预览
-     *
-     * @var \addons\XyStore\common\models\forms\PreviewForm
-     */
-    protected $previewForm;
-
-    /**
-     * @param $action
-     * @return bool
-     * @throws \yii\base\InvalidConfigException
-     * @throws \yii\web\BadRequestHttpException
-     * @throws \yii\web\ForbiddenHttpException
-     * @throws \yii\web\NotFoundHttpException
-     */
-    public function beforeAction($action)
-    {
-        if (!parent::beforeAction($action)) {
-            return false;
-        }
-
-        $this->previewHandler = new \addons\XyStore\common\components\PreviewHandler($this->handlers);
-
-        $config = AddonHelper::getConfig();
-        /** @var AccessToken $identity */
-        $identity = Yii::$app->user->identity;
-
-        $model = new \addons\XyStore\common\models\forms\PreviewForm();
-        $model = $model->loadDefaultValues();
-        $model->buyer_id = $identity->member_id;
-        $model->is_logistics = $config['is_logistics'] ?? 0; // 物流可选
-        $model->buyer_self_lifting = $config['buyer_self_lifting'] ?? 0; // 开启自提
-        $model->pickup_point_is_open = $config['pickup_point_is_open'] ?? 0; // 自提运费开启
-        $model->pickup_point_fee = $config['pickup_point_fee'] ?? 0;
-        $model->pickup_point_freight = $config['pickup_point_freight'] ?? 0;
-        $model->order_invoice_tax = $config['order_invoice_tax'] ?? 0; // 税率
-        $model->invoice_content_default = isset($config['order_invoice_content']) ? explode(',', $config['order_invoice_content']) : [];
-
-        $this->previewForm = $model;
-
-        return true;
-    }
     /**
      * 首页
      *
@@ -143,67 +71,6 @@ class OrderController extends BaseController
         ]);
     }
 
-    /**
-    * Creates a new Order model.
-    * If creation is successful, the browser will be redirected to the 'view' page.
-    * @return mixed
-    */
-    public function actionCreate()
-    {
-        /** @var AccessToken $identity */
-        /** @var PreviewForm $model */
-        $identity = Yii::$app->user->identity;
-        $model = $this->previewForm;
-        $model->setScenario('create');
-        $model->attributes = Yii::$app->request->post();
-        $model->member = Yii::$app->xyStoreService->member->findById($identity->member_id);
-
-        // 触发 - 初始化数据
-        $initOrderData = new InitOrderData();
-        $initOrderData->isNewRecord = true;
-        $model = $initOrderData->execute($model, $model->type);
-        $model->address_id && $model->address = Yii::$app->services->memberAddress->findById($model->address_id, $identity->member_id);
-
-        // 触发 - 营销
-        $model = $this->previewHandler->start($model, true);
-        if ($model->getErrors() || !$model->validate()) {
-            return ResultHelper::json(422, $this->getError($model));
-        }
-
-        $transaction = Yii::$app->db->beginTransaction();
-        try {
-            // 订单来源
-            $model->order_from = Yii::$app->user->identity->group;
-            $order = Yii::$app->xyStoreService->order->create($model);
-            // 消耗积分
-            if ($order->point > 0) {
-                Yii::$app->services->memberCreditsLog->decrInt(new CreditsLogForm([
-                    'member' => $model->member,
-                    'num' => $order->point,
-                    'credit_group' => 'orderCreate',
-                    'map_id' => $order->id,
-                    'remark' => '【微商城】订单支付',
-                ]));
-            }
-
-            // 支付金额为0 直接支付
-            $order->pay_money == 0 && Yii::$app->xyStoreService->order->pay($order, $order->payment_type);
-
-            // 删除购物车
-            if ($model->type == PreviewTypeEnum::CART) {
-                $sku_ids = ArrayHelper::getColumn($model->orderProducts, 'sku_id');
-                !empty($sku_ids) && Yii::$app->xyStoreService->memberCartItem->deleteBySkuIds($sku_ids, $order->buyer_id);
-            }
-
-            $transaction->commit();
-
-            return $order;
-        } catch (\Exception $e) {
-            $transaction->rollBack();
-
-            return ResultHelper::json(422, $e->getMessage());
-        }
-    }
     /**
      * @param $id
      * @return string
@@ -330,7 +197,16 @@ class OrderController extends BaseController
     public function actionClose($id)
     {
         try {
-            Yii::$app->tinyShopService->order->close($id);
+            Yii::$app->xyStoreService->order->close($id);
+
+            // 记录操作
+            Yii::$app->xyStoreService->orderAction->create(
+                '关闭订单',
+                $id,
+                OrderStatusEnum::NOT_PAY,
+                Yii::$app->user->identity->id,
+                Yii::$app->user->identity->username
+            );
 
             return ResultHelper::json(200, '操作成功');
         } catch (\Exception $e) {
@@ -348,6 +224,15 @@ class OrderController extends BaseController
     {
         try {
             Yii::$app->xyStoreService->order->takeDelivery($id);
+
+            // 记录操作
+            Yii::$app->xyStoreService->orderAction->create(
+                '确认收货',
+                $id,
+                OrderStatusEnum::SHIPMENTS,
+                Yii::$app->user->identity->id,
+                Yii::$app->user->identity->username
+            );
 
             return ResultHelper::json(200, '操作成功');
         } catch (\Exception $e) {
@@ -393,6 +278,14 @@ class OrderController extends BaseController
 
                 // 进行收货
                 Yii::$app->xyStoreService->order->takeDelivery($id);
+                // 记录操作
+                Yii::$app->xyStoreService->orderAction->create(
+                    '确认收货',
+                    $id,
+                    OrderStatusEnum::SHIPMENTS,
+                    Yii::$app->user->identity->id,
+                    Yii::$app->user->identity->username
+                );
 
                 $transaction->commit();
 
@@ -442,10 +335,7 @@ class OrderController extends BaseController
     protected function findModel($id)
     {
         /* @var $model Order */
-        if (empty($id) || empty(($model = $this->modelClass::findOne([
-                'id' => $id,
-                'merchant_id' => $this->getMerchantId()
-            ])))) {
+        if (empty($id) || empty($model = $this->modelClass::find()->where(['id' => $id])->andFilterWhere(['merchant_id' => $this->getMerchantId()])->one())) {
             throw new NotFoundHttpException('找不到订单');
         }
 

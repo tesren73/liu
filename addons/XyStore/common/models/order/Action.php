@@ -1,11 +1,11 @@
 <?php
 
-namespace addons\TinyShop\common\models\order;
+namespace addons\XyStore\common\models\order;
 
 use Yii;
 
 /**
- * This is the model class for table "{{%addon_shop_order_action}}".
+ * This is the model class for table "{{%addon_store_order_action}}".
  *
  * @property int $id 动作id
  * @property int $order_id 订单id
@@ -25,7 +25,7 @@ class Action extends \common\models\base\BaseModel
      */
     public static function tableName()
     {
-        return '{{%addon_shop_order_action}}';
+        return '{{%addon_store_order_action}}';
     }
 
     /**

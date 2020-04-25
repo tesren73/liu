@@ -1,21 +1,23 @@
 <?php
 
-namespace addons\TinyShop\merchant\modules\order\controllers;
+namespace addons\XyStore\merchant\modules\order\controllers;
 
 use Yii;
 use yii\web\NotFoundHttpException;
 use common\enums\StatusEnum;
 use common\helpers\ArrayHelper;
 use common\helpers\ResultHelper;
+use common\enums\PayTypeEnum;
 use common\models\forms\CreditsLogForm;
-use addons\TinyShop\common\models\order\OrderProduct;
-use addons\TinyShop\common\models\forms\RefundForm;
-use addons\TinyShop\merchant\forms\PriceAdjustmentForm;
-use addons\TinyShop\merchant\controllers\BaseController;
+use addons\XyStore\common\models\order\OrderProduct;
+use addons\XyStore\common\models\forms\RefundForm;
+use addons\XyStore\merchant\forms\PriceAdjustmentForm;
+use addons\XyStore\merchant\controllers\BaseController;
+use addons\XyStore\common\models\order\Order;
 
 /**
  * Class OrderProductController
- * @package addons\TinyShop\merchant\controllers
+ * @package addons\XyStore\merchant\controllers
  * @author jianyan74 <751393839@qq.com>
  */
 class ProductController extends BaseController
@@ -30,7 +32,7 @@ class ProductController extends BaseController
     public function actionPriceAdjustment($id)
     {
         $model = new PriceAdjustmentForm();
-        $order = Yii::$app->tinyShopService->order->findById($id);
+        $order = Yii::$app->xyStoreService->order->findById($id);
         $model->shipping_money = $order->shipping_money;
 
         $this->activeFormValidate($model);
@@ -41,7 +43,7 @@ class ProductController extends BaseController
                 $model->save($order);
 
                 // 记录操作
-                Yii::$app->tinyShopService->orderAction->create(
+                Yii::$app->xyStoreService->orderAction->create(
                     '调整金额',
                     $order->id,
                     $order->order_status,
@@ -73,7 +75,7 @@ class ProductController extends BaseController
     public function actionRefundDetail($id)
     {
         return $this->render($this->action->id, [
-            'model' => Yii::$app->tinyShopService->orderProduct->findById($id),
+            'model' => Yii::$app->xyStoreService->orderProduct->findById($id),
         ]);
     }
 
@@ -87,7 +89,7 @@ class ProductController extends BaseController
         $id = Yii::$app->request->post('id');
 
         try {
-            Yii::$app->tinyShopService->orderProduct->refundPass($id);
+            Yii::$app->xyStoreService->orderProduct->refundPass($id);
 
             return ResultHelper::json(200, '操作成功');
         } catch (\Exception $e) {
@@ -108,7 +110,7 @@ class ProductController extends BaseController
         $always = Yii::$app->request->post('always', false);
 
         try {
-            Yii::$app->tinyShopService->orderProduct->refundNoPass($id, $always);
+            Yii::$app->xyStoreService->orderProduct->refundNoPass($id, $always);
 
             return ResultHelper::json(200, '操作成功');
         } catch (\Exception $e) {
@@ -127,25 +129,44 @@ class ProductController extends BaseController
     {
         /** @var OrderProduct $model */
         $model = $this->findRefundModel($id);
+        /** @var Order $order */
         $order = $model->order;
+        $refundTypes = [];
+        $refundTypes[PayTypeEnum::ON_LINE] = '线下';
+        $refundTypes[PayTypeEnum::USER_MONEY] = '余额';
+        $defaultRefundType = PayTypeEnum::ON_LINE;
+        // 线上支付
+        $thirdParty = PayTypeEnum::thirdParty();
+        if (in_array($order->payment_type, array_keys($thirdParty))) {
+            $refundTypes[$order->payment_type] = $thirdParty[$order->payment_type];
+        }
+
+        // 判断默认值
+        if (in_array($order->payment_type, array_keys($refundTypes))) {
+            $defaultRefundType = $order->payment_type;
+        }
 
         // 申请默认退款金额
-        $model->refund_balance_money = Yii::$app->tinyShopService->orderProduct->getRefundBalanceMoney($order, $model);
+        $model->refund_balance_money = Yii::$app->xyStoreService->orderProduct->getRefundBalanceMoney($order, $model);
 
         if ($model->load(Yii::$app->request->post())) {
             // 开启事务
             $transaction = Yii::$app->db->beginTransaction();
             try {
                 // 退款进订单
-                $orderProduct = Yii::$app->tinyShopService->orderProduct->refundReturnMoney($id);
-                // 退款进用户余额/原路退回
-                Yii::$app->services->memberCreditsLog->incrMoney(new CreditsLogForm([
-                    'member' => Yii::$app->services->member->get($model->buyer_id),
-                    'num' => $orderProduct->refund_balance_money,
-                    'credit_group' => 'orderRefundBalanceMoney',
-                    'map_id' => $orderProduct->id,
-                    'remark' => '订单退款',
-                ]));
+                $orderProduct = Yii::$app->xyStoreService->orderProduct->refundReturnMoney($id);
+                if ($model->refund_type == PayTypeEnum::USER_MONEY) {
+                    // 退款进用户余额/原路退回
+                    Yii::$app->services->memberCreditsLog->incrMoney(new CreditsLogForm([
+                        'member' => Yii::$app->services->member->get($model->member_id),
+                        'num' => $orderProduct->refund_balance_money,
+                        'credit_group' => 'orderRefundBalanceMoney',
+                        'map_id' => $orderProduct->id,
+                        'remark' => '【微商城】订单退款',
+                    ]));
+                } elseif (in_array($model->refund_type, array_keys($thirdParty))) {
+                    Yii::$app->services->pay->refund($model->refund_type, $orderProduct->refund_balance_money, $order->order_sn);
+                }
 
                 $transaction->commit();
 
@@ -153,13 +174,15 @@ class ProductController extends BaseController
             } catch (\Exception $e) {
                 $transaction->rollBack();
 
-                return $this->message($e->getMessage(), Yii::$app->request->referrer, 'error');
+                return $this->message($e->getMessage(), $this->redirect(['order/index']), 'error');
             }
         }
 
         return $this->renderAjax($this->action->id, [
             'product' => $model,
             'order' => $order,
+            'refundTypes' => $refundTypes,
+            'defaultRefundType' => $defaultRefundType,
         ]);
     }
 
@@ -173,7 +196,7 @@ class ProductController extends BaseController
         $id = Yii::$app->request->post('id');
 
         try {
-            Yii::$app->tinyShopService->orderProduct->refundDelivery($id);
+            Yii::$app->xyStoreService->orderProduct->refundDelivery($id);
 
             return ResultHelper::json(200, '操作成功');
         } catch (\Exception $e) {

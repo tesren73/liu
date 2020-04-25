@@ -1,12 +1,12 @@
 <?php
 
-namespace addons\TinyShop\common\models\order;
+namespace addons\XyStore\common\models\order;
 
 use common\enums\StatusEnum;
 use Yii;
 
 /**
- * This is the model class for table "{{%addon_shop_order_product_express}}".
+ * This is the model class for table "{{%addon_store_order_product_express}}".
  *
  * @property string $id
  * @property int $order_id 订单id
@@ -41,7 +41,7 @@ class ProductExpress extends \common\models\base\BaseModel
      */
     public static function tableName()
     {
-        return '{{%addon_shop_order_product_express}}';
+        return '{{%addon_store_order_product_express}}';
     }
 
     /**

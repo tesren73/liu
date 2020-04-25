@@ -1,6 +1,6 @@
 <?php
 
-namespace addons\TinyShop\merchant\modules\order\controllers;
+namespace addons\XyStore\merchant\modules\order\controllers;
 
 use Yii;
 use yii\data\Pagination;
@@ -8,16 +8,18 @@ use yii\web\NotFoundHttpException;
 use common\enums\StatusEnum;
 use common\helpers\ResultHelper;
 use common\models\forms\CreditsLogForm;
-use addons\TinyShop\common\models\order\Customer;
-use addons\TinyShop\common\models\forms\CustomerRefundForm;
-use addons\TinyShop\common\models\order\OrderProduct;
-use addons\TinyShop\merchant\controllers\BaseController;
+use common\enums\PayTypeEnum;
+use addons\XyStore\common\models\order\Customer;
+use addons\XyStore\common\models\forms\CustomerRefundForm;
+use addons\XyStore\common\models\order\OrderProduct;
+use addons\XyStore\merchant\controllers\BaseController;
+use addons\XyStore\common\models\order\Order;
 
 /**
  * 售后
  *
  * Class CustomerController
- * @package addons\TinyShop\merchant\modules\order\controllers
+ * @package addons\XyStore\merchant\modules\order\controllers
  * @author jianyan74 <751393839@qq.com>
  */
 class CustomerController extends BaseController
@@ -60,7 +62,7 @@ class CustomerController extends BaseController
         $id = Yii::$app->request->post('id');
 
         try {
-            Yii::$app->tinyShopService->orderCustomer->refundPass($id);
+            Yii::$app->xyStoreService->orderCustomer->refundPass($id);
 
             return ResultHelper::json(200, '操作成功');
         } catch (\Exception $e) {
@@ -81,7 +83,7 @@ class CustomerController extends BaseController
         $always = Yii::$app->request->post('always', false);
 
         try {
-            Yii::$app->tinyShopService->orderCustomer->refundNoPass($id, $always);
+            Yii::$app->xyStoreService->orderCustomer->refundNoPass($id, $always);
 
             return ResultHelper::json(200, '操作成功');
         } catch (\Exception $e) {
@@ -100,25 +102,44 @@ class CustomerController extends BaseController
     {
         /** @var OrderProduct $model */
         $model = $this->findRefundModel($id);
+        /** @var Order $order */
         $order = $model->order;
+        $refundTypes = [];
+        $refundTypes[PayTypeEnum::ON_LINE] = '线下';
+        $refundTypes[PayTypeEnum::USER_MONEY] = '余额';
+        $defaultRefundType = PayTypeEnum::ON_LINE;
+        // 线上支付
+        $thirdParty = PayTypeEnum::thirdParty();
+        if (in_array($order->payment_type, array_keys($thirdParty))) {
+            $refundTypes[$order->payment_type] = $thirdParty[$order->payment_type];
+        }
+
+        // 判断默认值
+        if (in_array($order->payment_type, array_keys($refundTypes))) {
+            $defaultRefundType = $order->payment_type;
+        }
 
         // 申请默认退款金额
-        $model->refund_balance_money = Yii::$app->tinyShopService->orderProduct->getRefundBalanceMoney($order, $model);
+        $model->refund_balance_money = Yii::$app->xyStoreService->orderProduct->getRefundBalanceMoney($order, $model);
 
         if ($model->load(Yii::$app->request->post())) {
             // 开启事务
             $transaction = Yii::$app->db->beginTransaction();
             try {
                 // 退款进订单
-                $orderProduct = Yii::$app->tinyShopService->orderCustomer->refundReturnMoney($id, false);
-                // 退款进用户余额/原路退回
-                Yii::$app->services->memberCreditsLog->incrMoney(new CreditsLogForm([
-                    'member' => Yii::$app->services->member->get($model->member_id),
-                    'num' => $orderProduct->refund_balance_money,
-                    'credit_group' => 'orderRefundBalanceMoney',
-                    'map_id' => $orderProduct->id,
-                    'remark' => '订单售后退款',
-                ]));
+                $orderProduct = Yii::$app->xyStoreService->orderCustomer->refundReturnMoney($id);
+                if ($model->refund_type == PayTypeEnum::USER_MONEY) {
+                    // 退款进用户余额/原路退回
+                    Yii::$app->services->memberCreditsLog->incrMoney(new CreditsLogForm([
+                        'member' => Yii::$app->services->member->get($model->member_id),
+                        'num' => $orderProduct->refund_balance_money,
+                        'credit_group' => 'orderRefundBalanceMoney',
+                        'map_id' => $orderProduct->id,
+                        'remark' => '【微商城】订单退款',
+                    ]));
+                } elseif (in_array($model->refund_type, array_keys($thirdParty))) {
+                    Yii::$app->services->pay->refund($model->refund_type, $orderProduct->refund_balance_money, $order->order_sn);
+                }
 
                 $transaction->commit();
 
@@ -126,13 +147,15 @@ class CustomerController extends BaseController
             } catch (\Exception $e) {
                 $transaction->rollBack();
 
-                return $this->message($e->getMessage(), Yii::$app->request->referrer, 'error');
+                return $this->message($e->getMessage(), $this->redirect(['index']), 'error');
             }
         }
 
-        return $this->renderAjax('@addons/TinyShop/merchant/modules/order/views/product/refund-return-money', [
+        return $this->renderAjax('@addons/XyStore/merchant/modules/order/views/product/refund-return-money', [
             'product' => $model,
             'order' => $order,
+            'refundTypes' => $refundTypes,
+            'defaultRefundType' => $defaultRefundType,
         ]);
     }
 
@@ -146,7 +169,7 @@ class CustomerController extends BaseController
         $id = Yii::$app->request->post('id');
 
         try {
-            Yii::$app->tinyShopService->orderCustomer->refundDelivery($id);
+            Yii::$app->xyStoreService->orderCustomer->refundDelivery($id);
 
             return ResultHelper::json(200, '操作成功');
         } catch (\Exception $e) {
@@ -161,7 +184,7 @@ class CustomerController extends BaseController
     public function actionRefundDetail($id)
     {
         return $this->render($this->action->id, [
-            'model' => Yii::$app->tinyShopService->orderCustomer->findById($id),
+            'model' => Yii::$app->xyStoreService->orderCustomer->findById($id),
         ]);
     }
 

@@ -1,15 +1,15 @@
 <?php
 
-namespace addons\TinyShop\services\order;
+namespace addons\XyStore\services\order;
 
 use common\components\Service;
 use common\enums\StatusEnum;
-use addons\TinyShop\common\enums\OrderStatusEnum;
-use addons\TinyShop\common\models\order\Action;
+use addons\XyStore\common\enums\OrderStatusEnum;
+use addons\XyStore\common\models\order\Action;
 
 /**
  * Class ActionService
- * @package addons\TinyShop\services\order
+ * @package addons\XyStore\services\order
  * @author jianyan74 <751393839@qq.com>
  */
 class ActionService extends Service

@@ -30,7 +30,7 @@ class OptometryService extends Service
     {
         return Supplier::find()
             ->where(['status' => StatusEnum::ENABLED])
-            ->andWhere(['merchant_id' => Yii::$app->services->merchant->getId()])
+            ->andWhere(['merchant_id' => $this->getMerchantId()])
             ->orderBy('sort asc, id desc')
             ->asArray()
             ->all();
