@@ -1,0 +1,12 @@
+{
+  "navigationBarTitleText": "详情展示",
+  "titleNView": {
+    "type": "transparent"
+  },
+  "usingComponents": {
+    "rf-loading": "/components/rf-loading/rf-loading",
+    "rf-badge": "/components/rf-badge/rf-badge",
+    "rf-rate": "/components/rf-rate/rf-rate",
+    "rf-number-box": "/components/rf-number-box/index"
+  }
+}
