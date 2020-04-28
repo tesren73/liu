@@ -15,9 +15,9 @@
 
 ### Demo
 
-[H5 预览](http://h5.tinyshop.rageframe.com): http://h5.tinyshop.rageframe.com  
+[H5 预览](http://h5.tinyshop.rageframe.com): http://h5.tinyshop.rageframe.com
 
-Android App体验版 [下载](http://h5.tinyshop.rageframe.com/RageFrameTinyShop.apk) 
+Android App体验版 [下载](http://h5.tinyshop.rageframe.com/RageFrameTinyShop.apk)
 
 微信小程序和QQ小程序正处于审核阶段, 可自行clone至本地运行。
 
@@ -25,22 +25,30 @@ Android App体验版 [下载](http://h5.tinyshop.rageframe.com/RageFrameTinyShop
 
 [后台预览](http://demo2.rageframe.com/backend): http://demo2.rageframe.com/backend
 
-账号: demo   
-密码: 123456 
+账号: demo
+密码: 123456
 
-![image](docs/images/h5-qrcode.png) 
+![image](docs/images/h5-qrcode.png)
 
 ### 更新记录
 
-#### v1.1.1
+#### v1.1.4
 
-updated 2020.04.20
+updated 2020.04.24
 
-- 修复: 商品列表ios 刘海屏/非刘海屏 android部分机型页面正常显示 
-- 修复: 商品列表 综合排序字体过大 内容溢出问题
-- 修复: 收货按钮的正常显示
-- [ ] 商品详细页面图片过大不能自适应 没有复现
-- [ ] 阻止按钮在短时间内多次点击
+- 修复：下架商品的商品详情页显示
+- 优化：已过期或者已失效商品不计入购物车数字脚本
+
+#### v1.1.3
+
+updated 2020.04.23
+
+- 新增: 微信APP支付
+- 修复: 统一switch 组件样式
+- 修复: app端创建订单按钮不居中
+- 修复: 微信小程序协议不显示
+- 修复: 登录、注册、修改密码页面发送验证码倒计时 刷新或者切换页面数值重置
+- 提示: 自提点提货下单还是需要选择收货地址 收货地址信息包含用户姓名和用户联系方式
 
 > [更多更新记录](docs/UPDATE.md)
 
@@ -56,7 +64,7 @@ updated 2020.04.20
 // 安装yarn命令
 npm i -g yarn
 // 安装依赖
-yarn 
+yarn
 ```
 
 2. 运行到指定平台
@@ -64,7 +72,7 @@ yarn
 ```
 // 运行到H5
 yarn serve
-// 运行至对应的小程序平台 
+// 运行至对应的小程序平台
 yarn dev:PLATFORM
 ```
 

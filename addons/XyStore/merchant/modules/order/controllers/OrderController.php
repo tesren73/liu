@@ -2,17 +2,11 @@
 
 namespace addons\XyStore\merchant\modules\order\controllers;
 
-use addons\XyStore\common\components\marketing\AfterHandler;
-use addons\XyStore\common\components\marketing\CouponHandler;
-use addons\XyStore\common\components\marketing\FeeHandler;
-use addons\XyStore\common\components\marketing\FullMailHandler;
-use addons\XyStore\common\components\marketing\UsePointHandler;
 use addons\XyStore\common\components\PreviewHandler;
-use addons\XyStore\common\components\InitOrderData;
-use addons\XyStore\common\models\forms\PreviewForm;
-use common\helpers\AddonHelper;
-use common\models\api\AccessToken;
-use common\models\forms\CreditsLogForm;
+use addons\XyStore\common\enums\DecimalReservationEnum;
+use addons\XyStore\common\models\product\Product;
+use addons\XyStore\common\models\SettingForm;
+use addons\XyStore\merchant\forms\ProductForm;
 use Yii;
 use yii\data\Pagination;
 use yii\db\ActiveQuery;
@@ -24,8 +18,6 @@ use common\enums\PayTypeEnum;
 use addons\XyStore\common\models\order\Order;
 use addons\XyStore\common\enums\OrderStatusEnum;
 use addons\XyStore\common\enums\RefundStatusEnum;
-use addons\XyStore\merchant\forms\DeliverProductForm;
-use addons\XyStore\merchant\forms\PickupForm;
 use addons\XyStore\merchant\controllers\BaseController;
 
 /**
@@ -370,40 +362,64 @@ class OrderController extends BaseController
      */
     public function actionCreate()
     {
-        $model = new Order();
+            $model = new ProductForm();
+            $model->merchant_id = $this->getMerchantId();
+            $model->loadDefaultValues();
+        $model->defaultMemberDiscount = Yii::$app->xyStoreService->productMemberDiscount->getLevelListByProductId($id);
+        $model->member_level_decimal_reservation = $model->defaultMemberDiscount[0]['decimal_reservation_number'] ?? DecimalReservationEnum::DEFAULT;
+
         if ($model->load(Yii::$app->request->post()))
         {
+            $data = Yii::$app->request->post();
             $transaction = Yii::$app->db->beginTransaction();
             try {
                 // 订单来源
-                $model->order_from = Yii::$app->user->identity->group;
-                //$order = Yii::$app->xyStoreService->order->create($model);
-                if ($model->save()) {
+                $data->order_from = Yii::$app->user->identity->group;
+                // 载入数据并验证
+                $order = Yii::$app->xyStoreService->order->create($model);
+                //if ($model->save()) {
                     //return $this->redirect(['view', 'id' => $model->id]);
-                }
+                //}
                 // 消耗积分
-                if ($order->point > 0) {
-                    Yii::$app->services->memberCreditsLog->decrInt(new CreditsLogForm([
-                        'member' => $model->member,
-                        'num' => $order->point,
-                        'credit_group' => 'orderCreate',
-                        'map_id' => $order->id,
-                        'remark' => '【门店】订单支付',
-                    ]));
-                }
+//                if ($order->point > 0) {
+//                    Yii::$app->services->memberCreditsLog->decrInt(new CreditsLogForm([
+//                        'member' => $model->member,
+//                        'num' => $order->point,
+//                        'credit_group' => 'orderCreate',
+//                        'map_id' => $order->id,
+//                        'remark' => '【门店】订单支付',
+//                    ]));
+//                }
 
                 $transaction->commit();
-                return $this->render('create', [
-                    'model' => $model,
-                ]);
+                return ResultHelper::json(200, '操作成功');
+
             } catch (\Exception $e) {
                 $transaction->rollBack();
-
                 return ResultHelper::json(422, $e->getMessage());
             }
         }
+        // 获取参数、规格和规格值、已选规格值
+        list($attributeValue, $specValue, $specValuejsData) = Yii::$app->xyStoreService->product->getSpecValueAttribute($model);
+        // 配置
+        $setting = new SettingForm();
+        $setting->attributes = $this->getConfig();
         return $this->render('create', [
             'model' => $model,
+            'cates' => Yii::$app->xyStoreService->productCate->getMapList(),
+            'brands' => Yii::$app->xyStoreService->productBrand->getMapList(),
+            'supplier' => Yii::$app->xyStoreService->baseSupplier->getMapList(),
+            'companys' => Yii::$app->xyStoreService->expressCompany->getMapList(), // 快递物流
+            'skus' => Yii::$app->xyStoreService->productSku->findByProductId($id),
+            'baseAttribute' => Yii::$app->xyStoreService->baseAttribute->getMapList(), // 基础类型
+            'attributeValue' => $attributeValue,
+            'specValue' => $specValue,
+            'specValuejsData' => $specValuejsData,
+            'productStatusExplain' => Product::$productStatusExplain,
+            'commissionRate' => $commissionRate,
+            'virtualType' => $virtualType,
+            'virtual_group' => $virtual_group,
+            'setting' => $setting,
         ]);
     }
     /**

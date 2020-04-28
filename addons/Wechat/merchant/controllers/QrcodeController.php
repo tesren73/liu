@@ -9,6 +9,7 @@ use common\traits\MerchantCurd;
 use addons\Wechat\common\models\Qrcode;
 use common\helpers\ResultHelper;
 
+
 /**
  * 微信二维码管理
  *
@@ -30,7 +31,8 @@ class QrcodeController extends BaseController
      */
     public function actionIndex()
     {
-        $data = Qrcode::find()->where(['merchant_id' => $this->getMerchantId()]);
+        $data = Qrcode::find()
+            ->where(['merchant_id' => $this->getMerchantId()]);
         $pages = new Pagination(['totalCount' => $data->count(), 'pageSize' => $this->pageSize]);
         $models = $data->offset($pages->offset)
             ->orderBy('id desc')

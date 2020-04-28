@@ -22,17 +22,17 @@ $this->params['breadcrumbs'][] = $this->title;
             'id' => 'productForm',
         ]); ?>
         <div class="nav-tabs-custom">
-            <ul class="nav nav-tabs">
-                <li class="active"><a href="#tab_1" data-toggle="tab">基本</a></li>
-                <li><a href="#tab_2" data-toggle="tab">库存规格</a></li>
-                <li><a href="#tab_3" data-toggle="tab">封面详情</a></li>
-                <li><a href="#tab_4" data-toggle="tab">预售设置</a></li>
-                <li><a href="#tab_5" data-toggle="tab">积分设置</a></li>
-                <li><a href="#tab_7" data-toggle="tab">阶梯优惠</a></li>
-                <li class="<?php if($setting->is_open_commission == StatusEnum::DISABLED) { ?>hide<?php } ?>"><a href="#tab_8" data-toggle="tab">分销设置</a></li>
-            </ul>
-            <div class="tab-content">
-                <div class="tab-pane active p-xs" id="tab_1">
+                        <ul class="nav nav-tabs">
+                            <li class="active"><a href="#tab_1" data-toggle="tab">基本</a></li>
+                            <li><a href="#tab_2" data-toggle="tab">库存规格</a></li>
+                            <li><a href="#tab_3" data-toggle="tab">封面详情</a></li>
+                            <li><a href="#tab_4" data-toggle="tab">预售设置</a></li>
+                            <li><a href="#tab_5" data-toggle="tab">积分设置</a></li>
+                            <li><a href="#tab_7" data-toggle="tab">阶梯优惠</a></li>
+                            <li class="<?php if($setting->is_open_commission == StatusEnum::DISABLED) { ?>hide<?php } ?>"><a href="#tab_8" data-toggle="tab">分销设置</a></li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane active p-xs" id="tab_1">
                     <?= $form->field($model, 'name')->textInput(); ?>
                     <div class="row">
                         <div class="col-sm-4">

@@ -11,8 +11,7 @@ use common\interfaces\AddonWidget;
  * 安装
  *
  * Class Install
- * @package addons\Merchants
- */
+ * @package addons\Merchants */
 class Install extends Migration implements AddonWidget
 {
     /**
@@ -24,8 +23,8 @@ class Install extends Migration implements AddonWidget
     */
     public function run($addon)
     {
-         MigrateHelper::upByPath([
-             '@addons/Merchants/console/migrations/'
-         ]);
+        // MigrateHelper::upByPath([
+        //     '@addons/Merchants/console/migrations/'
+        // ]);
     }
 }

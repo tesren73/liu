@@ -4,7 +4,7 @@ namespace addons\Merchants\merchant\controllers;
 
 use Yii;
 use common\helpers\ArrayHelper;
-use common\interfaces\AddonsSetting;
+use merchant\interfaces\AddonsSetting;
 use addons\Merchants\common\models\SettingForm;
 
 /**

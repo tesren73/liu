@@ -9,6 +9,7 @@ use common\traits\MerchantCurd;
 use addons\Wechat\common\models\MsgHistory;
 use addons\Wechat\common\models\Rule;
 
+
 /**
  * 微信历史消息
  *

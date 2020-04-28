@@ -160,10 +160,6 @@ return [
                             'name' => 'fans/sync-all-openid',
                         ],
                         [
-                            'title' => '同步全部粉丝',
-                            'name' => 'fans/get-all-fans',
-                        ],
-                        [
                             'title' => '同步',
                             'name' => 'fans/sync',
                         ],
