@@ -2,6 +2,7 @@
 
 namespace addons\XyStore\services\member;
 
+use common\models\member\Account;
 use Yii;
 use common\enums\StatusEnum;
 use common\helpers\ArrayHelper;
@@ -48,5 +49,25 @@ class MemberService extends Service
             ->orderBy('id desc')
             ->asArray()
             ->all();
+    }
+    /**
+     * @param $quary
+     * @return array|\yii\db\ActiveRecord|null
+     */
+    public function findByQuary($quary, $select = ['*'])
+    {
+        return Member::find()
+            ->select($select)
+            ->where("status=:status and (username like :keyword or `mobile` like :keyword )")
+            ->addParams([':status'=>StatusEnum::ENABLED,':keyword'=>$quary])
+            ->andFilterWhere(['merchant_id' => $this->getMerchantId()])
+            ->one();
+    }
+    public function findAccount($id, $select = ['*'])
+    {
+        return Account::find()
+            ->select($select)
+            ->where(['member_id' => $id, 'status' => StatusEnum::ENABLED])
+            ->one();
     }
 }

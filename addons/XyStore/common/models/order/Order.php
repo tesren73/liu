@@ -3,6 +3,7 @@
 namespace addons\XyStore\common\models\order;
 
 use addons\XyStore\common\models\marketing\Coupon;
+use addons\XyStore\common\models\product\Product;
 use common\behaviors\MerchantBehavior;
 use common\helpers\AddonHelper;
 use common\helpers\BcHelper;
@@ -323,5 +324,15 @@ class Order extends \common\models\base\BaseModel
         }
 
         return parent::beforeSave($insert);
+    }
+
+    /**
+     * @param $pid
+     * @return array
+     */
+    public function getCityList($pid)
+    {
+        $model = Product::findAll(array('pid'=>$pid));
+        return ArrayHelper::map($model, 'id', 'name');
     }
 }

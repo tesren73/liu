@@ -1,524 +1,336 @@
 <?php
 
-use common\enums\StatusEnum;
-use common\helpers\AddonHelper;
-use common\helpers\Url;
-use yii\helpers\Html;
+use common\helpers\Html;
+use unclead\multipleinput\MultipleInput;
 use yii\widgets\ActiveForm;
+use kartik\select2\Select2;
 
 /* @var $this yii\web\View */
 /* @var $model addons\XyStore\common\models\order\Order */
+/* @var $form yii\widgets\ActiveForm */
 
-$this->title = '新订单';
-$this->params['breadcrumbs'][] = ['label' => '订单列表', 'url' => ['index']];
+$this->title = '销售单';
+$this->params['breadcrumbs'][] = ['label' => 'Orders', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<div class="row">
-    <div class="col-md-12">
-        <!-- Custom Tabs -->
-        <?php $form = ActiveForm::begin([
-            'id' => 'productForm',
-        ]); ?>
-        <div class="nav-tabs-custom">
-            <ul class="nav nav-tabs">
-                <li class="active"><a href="#tab_1" data-toggle="tab">基本</a></li>
-                <li><a href="#tab_2" data-toggle="tab">库存规格</a></li>
-            </ul>
-            <div class="tab-content">
-                <div class="tab-pane active p-xs" id="tab_1">
-                    <?= $this->render('_specification', [
-                        'model' => $model,
-                        'form' => $form,
-                        'specValue' => $specValue,
-                        'attributeValue' => $attributeValue,
-                        'baseAttribute' => $baseAttribute,
-                    ]) ?>
-                </div>
-                <!-- /.tab-pane -->
-                <div class="tab-pane p-xs" id="tab_2">
 
-                </div>
-                <!-- /.tab-pane -->
-                <div class="box-footer text-center">
-                    <?= $form->field($model, 'id')->hiddenInput()->label(false); ?>
-                    <div class="hide" id="specValue"></div>
-                    <button class="btn btn-primary" type="button" onclick="beforSubmit()">保存</button>
-                    <span class="btn btn-white" onclick="history.go(-1)">返回</span>
-                </div>
+<div class="row">
+    <div class="col-lg-12">
+        <div class="box">
+            <div class="box-body">
+                <?php $form = ActiveForm::begin([
+                    'fieldConfig' => [
+                        'template' => "<div class='col-sm-2 text-right'>{label}</div><div class='col-sm-10'>{input}\n{hint}\n{error}</div>",
+                    ],
+                ]); ?>
+            <div class="col-md-12">
+                <table class="table table-bordered">
+                    <tr>
+                        <td colspan="3">
+                            <input type="text" style="width:350px" class="form-control pull-left" id="cardnumber" placeholder="请输入会员卡或者手机号">
+                            &nbsp;
+                            <input class="btn btn-success" type="button" id="query" value="搜索">
+                        </td>
+                        <td>订单编号</td>
+                        <td colspan="2"><?= $form->field($model, 'order_sn')->textInput(['maxlength' => true])->label(false);?></td>
+                    </tr>
+                    <tr>
+                        <td colspan="6">
+                            <h4>会员信息</h4>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>姓名</th>
+                        <td id="username">-</td>
+                        <th>性别</th>
+                        <td id="gender">-</td>
+                        <th>积分</th>
+                        <td id="user_integral">-</td>
+                    </tr>
+                    <tr>
+                        <th>昵称</th>
+                        <td id="nickname">-</td>
+                        <th>会员级别</th>
+                        <td id="current_level">-</td>
+                        <th>登记日期</th>
+                        <td id="created_at">-</td>
+                    </tr>
+                    <tr>
+                        <th>账户金额(元)</th>
+                        <td id="user_money">-</td>
+                        <th>手机号</th>
+                        <td id="mobile">-</td>
+                        <th>欠款金额(元)</th>
+                        <td id="arrears">-</tdarea_id>
+                    </tr>
+                </table>
             </div>
-            <!-- /.tab-content -->
+            <div class="col-md-12">
+                <table width="100%">
+                    <tbody>
+                        <tr>
+                            <td>
+                                <?= $form->field($model, 'modelProduct')->widget(MultipleInput::className(), [
+                                    'max' => 10,
+                                    'cloneButton' => true,
+                                    'columns' => [
+                                        [
+                                            'name'  => 'name',
+                                            'type'  => 'dropDownList',
+                                            'title' => '商品名称',
+                                            'enableError' => true,
+                                            'items'  => '',
+                                            'options' => [
+                                                'class' => 'input-priority'
+                                            ]
+                                        ],
+                                        [
+                                            'name'  => 'attribute',
+                                            'title' => '商品属性',
+                                            'type'  => 'dropDownList',
+                                            'enableError' => true,
+                                            'items'  => '',
+                                            'options' => [
+                                                'class' => 'input-priority'
+                                            ]
+                                        ],
+                                        [
+                                            'name'  => 'attribute_value',
+                                            'title' => '商品属性值',
+                                            'type'  => 'dropDownList',
+                                            'enableError' => true,
+                                            'options' => [
+                                                'readonly' => true,
+                                                'class' => 'input-priority'
+                                            ]
+                                        ],
+                                        [
+                                            'name'  => 'spec',
+                                            'title' => '度数',
+                                            'defaultValue' => 0,
+                                            'enableError' => true,
+                                            'options' => [
+                                                'readonly' => true,
+                                                'class' => 'input-priority'
+                                            ]
+                                        ],
+                                        [
+                                            'name'  => 'spec_value',
+                                            'title' => '散光',
+                                            'defaultValue' => 0,
+                                            'enableError' => true,
+                                            'options' => [
+                                                'readonly' => true,
+                                                'class' => 'input-priority'
+                                            ]
+                                        ],
+                                        [
+                                            'name'  => 'qty',
+                                            'title' => '数量',
+                                            'defaultValue' => 1,
+                                            'enableError' => true,
+                                            'options' => [
+                                                'class' => 'input-priority'
+                                            ]
+                                        ],
+                                        [
+                                            'name'  => 'price',
+                                            'title' => '单价',
+                                            'defaultValue' => 0.00,
+                                            'enableError' => true,
+                                            'options' => [
+                                                'class' => 'input-priority'
+                                            ]
+                                        ]
+                                    ]
+                                ])->label(false); ?>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                </div>
+                <div class="col-md-12">
+                    <h4>收款信息</h4>
+                    <table class="table table-bordered">
+                        <tr>
+                            <th>总金额：</th>
+                            <td><?= $form->field($model, 'order_money')->textInput(['maxlength' => true])->label(false);?></td>
+                            <th>消耗积分：</th>
+                            <td><?= $form->field($model, 'point')->textInput(['maxlength' => true])->label(false);?></td>
+                            <th>承担费用：</th>
+                            <td><?= $form->field($model, 'shipping_money')->textInput(['maxlength' => true])->label(false);?></td>
+                        </tr>
+                        <tr>
+                            <th>结算账户：</th>
+                            <td><?= $form->field($model, 'payment_type')->dropDownList([
+                                    'data' => '',
+                                ])->label(false);?></td>
+                            <th>付款金额：</th>
+                            <td><?= $form->field($model, 'pay_money')->textInput(['maxlength' => true])->label(false);?></td>
+                            <th>余额支付：</th>
+                            <td><?= $form->field($model, 'user_money')->textInput()->label(false);?></td>
+                        </tr>
+                        <tr>
+                            <th>制单人：</th>
+                            <td><?= $form->field($model, 'operator_id')->textInput(['maxlength' => true,'value' => Yii::$app->user->identity->username,'readonly' => true])->label(false);?></td>
+                            <th>订单状态</th>
+                            <td><?= $form->field($model, 'order_status')->dropDownList([
+                                    'data' => '',
+                                ])->label(false);?></td>
+                            <th>审核人：</th>
+                            <td>&nbsp;</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-12 text-center">
+                        <button class="btn btn-primary" type="submit">保存</button>
+                        <span class="btn btn-white" onclick="history.go(-1)">返回</span>
+                    </div>
+                </div>
+                <?php ActiveForm::end(); ?>
+            </div>
         </div>
-        <?php ActiveForm::end(); ?>
-        <!-- nav-tabs-custom -->
     </div>
 </div>
 
-<script>
-    // 默认sku
-    var defaultSku = JSON.parse('<?= json_encode($skus); ?>');
-    // 默认规格属性
-    var defaultSpecValue = JSON.parse('<?= json_encode($specValuejsData); ?>');
-    let batchType = 1;
-    // 所有选中数据
-    var allData = [];
-    // 所有重组sku数据
-    var allSku = [];
-    // sku值存储的数据
-    var skusDataArr = [];
-    var defaultAddImg = "<?= AddonHelper::file('img/sku-add.png') ?>";
+<!--添加模板-->
 
-    // 初始化渲染
-    $(document).ready(function () {
-            // 禁用输入
-            if($("#productform-stock").attr("readonly") != "readonly"){
-                $("#productform-stock").val(0).attr("readonly","readonly");
-            }
-            if($("#productform-price").attr("readonly") != "readonly"){
-                $("#productform-price").val(0).attr("readonly","readonly");
-            }
-            if($("#productform-market_price").attr("readonly") != "readonly"){
-                $("#productform-market_price").val(0).attr("readonly","readonly");
-            }
-            if($("#productform-cost_price").attr("readonly") != "readonly"){
-                $("#productform-cost_price").val(0).attr("readonly","readonly");
-            }
+<?php
+$js = <<<JS
+$(document).on('change', 'select', function(){
+    var selectnum = $("#w1 option:selected").text();//监听select改变，获取下拉选项值
 
-            // 写入sku
-            for (let i = 0; i < defaultSku.length; i++) {
-                let skuId = defaultSku[i]['data'];
-                let data = [];
-                data['sku'] = defaultSku[i]['data'];
-                data['price'] = defaultSku[i]['price'];
-                data['picture'] = defaultSku[i]['picture'];
-                data['marketPrice'] = defaultSku[i]['market_price'];
-                data['costPrice'] = defaultSku[i]['cost_price'];
-                data['stock'] = defaultSku[i]['stock'];
-                data['code'] = defaultSku[i]['code'];
+   var string_id=$(this).attr('id');  //order-modelproduct-0-name
+    var number = document.getElementById(string_id).value;
+    if(string_id.indexOf("name") != -1){
 
-                skusDataArr[skuId] = [];
-                skusDataArr[skuId] = data;
-            }
+        var url = '/merchant/order/order/getattribute';
+    	$.ajax({
+    	    async:false,
+    		type : 'post',
+    		cache:false,
+            url:url,
+            dataType : 'json',
+    		data:{'product_id':number},   //传值到控制器，获取相应数据
+    		success : function(data){
+                 $("#user_integral").val(data['user_integral']);
+                $("#user_money").val(data['user_money']);
+                $("#mobile").val(data['mobile']);
+                $("#current_level").val(data['current_level']);
+    		},
+    	    error: function(XMLHttpRequest, textStatus, errorThrown) {
+                                   //alert (errorThrown);
+                                  	//alert(XMLHttpRequest.status);
+      					},
+    		});
+    }
+    if(string_id.indexOf("invoiceinfo") != -1){
+        var messagediv = document.getElementById("message-tip");
+        messagediv.innerHTML="";
+       var sid=string_id.split("-");
+       var url = '/backend/yanpei/getgoods';
+       //var url = 'http://localhost/backend/yanpei/getgoods';
 
-            // 写入规格属性
-            for (let i = 0; i < defaultSpecValue.length; i++) {
-                $("#option-" + defaultSpecValue[i]['id']).removeClass('btn-white');
-                $("#option-" + defaultSpecValue[i]['id']).addClass('btn-primary');
-                addAttributes (defaultSpecValue[i]['id'], defaultSpecValue[i]['title'], defaultSpecValue[i]['pid'], defaultSpecValue[i]['ptitle'], false)
-            }
-
-            if (allData.length > 0) {
-                // 创建表头
-                createTableHeader();
-                // 创建内容
-                createTableBody();
-                // 创建表格底部
-                createTableFoot();
-                // 写入表格内的sku数据
-                setSkusDataArr();
-                $('.js-spec-table').removeClass('hide');
-            }
-    });
-
-    // 防止重复提交
-    var submitStatus = true;
-    // 验证并提交表单
-    function beforSubmit() {
-        if (submitStatus === false) {
-            // rfWarning('正在提交中...');
-            // return;
-        }
-
-        // 启用
-        if ($("input[name='ProductForm[is_attribute]']:checked").val() == '1' && allData.length == 0){
-            rfWarning('请选择填写商品规格信息');
-            return;
-        }
-
-        // 设置规格属性
-        var html = '';
-        for (let i = 0; i < allData.length; i++) {
-            var spec_id = allData[i]['id'];
-
-            var inputOptionStr = '';
-            var child = allData[i]['child'];
-            for (let j = 0; j < child.length; j++) {
-                let str = inputOptionStr ? '-' : '';
-                inputOptionStr += str + child[j]['id'];
-            }
-
-            html += '<input type="text" name="specValue[' + spec_id + ']" value="' + inputOptionStr + '">';
-        }
-
-        $('#specValue').html(html);
-
-        // 序列化数据
-        var data = $('#productForm').serializeArray();
-        // console.log(data);
-
-        submitStatus = false;
-        $.ajax({
-            type : "post",
-            url : "<?= Url::to(['create', 'id' => $model->id, 'virtual_group' => $virtual_group]); ?>",
-            dataType : "json",
-            data : data,
-            success: function(data) {
-                submitStatus = true;
-                if (parseInt(data.code) === 200) {
-                    swal("操作成功", "小手一抖就打开了一个框", "success").then((value) => {
-                        window.location = '<?= Url::to(['index']); ?>';
-                    });
-                } else {
-                    rfWarning(data.message);
+    	$.ajax({
+    	    async:false,
+    		type : 'post',
+    		cache:false,
+           url:url,
+           dataType : 'json',
+    		data:{'number':number},   //传值到控制器，获取相应数据
+    		success : function(data){
+                if('0'==data[0]['quantity']){
+                    messagediv.innerHTML="<font color='red'>您选择的商品库存不足！请重新选择。</font>";
+    		    }else{
+                   //var obj = JSON.parse(data);    //解析从控制器传来的数据（此时是数组）
+                   $("#invoiceinfo-invoiceinfo-"+sid[2]+"-name").val(data[0]['name']);
+                   //document.getElementById("invoiceinfo-goodsinfo-"+sid[2]+"-degrees").value = data[0]['degrees'];
+                   //$("#input-degrees").val(obj[0]['degrees']);//解析后的数据相应值放到对应ID的文本框中
+                   $("#invoiceinfo-invoiceinfo-"+sid[2]+"-degrees").val(data[0]['degrees']);
+                    $("#invoiceinfo-invoiceinfo-"+sid[2]+"-astigmia").val(data[0]['astigmia']);
+                    $("#invoiceinfo-invoiceinfo-"+sid[2]+"-price").val(data[0]['saleprice']);
                 }
+    		},
+    	       error: function(XMLHttpRequest, textStatus, errorThrown) {
+                                   //alert (errorThrown);
+                                  	//alert(XMLHttpRequest.status);
+      					},
+    		});
+   }
+});
+
+$("#invoices-total_amount").click(function () {
+    var toutelamou = 0;
+    for (var i = 0; i < 10; i++) {
+    //alert($("#invoiceinfo-invoiceinfo-"+i+"-saleprice").val());
+        if($("#invoiceinfo-invoiceinfo-"+i+"-price").length>0){
+           toutelamou += $("#invoiceinfo-invoiceinfo-"+i+"-price").val()*$("#invoiceinfo-invoiceinfo-"+i+"-qty").val();
+        }
+    }
+    //alert(toutelamou);
+    $("#invoices-total_amount").val(toutelamou);
+   // $("#invoices-rp_amount").val(toutelamou);
+});
+$("#invoices-rp_amount").change(function () {
+    var disamount = 0;
+    //alert($("#invoices-dis_amount").val());
+           disamount = $("#invoices-total_amount").val()-$("#invoices-rp_amount").val()-$("#invoices-customer_free").val();
+    //alert(toutelamou);
+    $("#invoices-dis_amount").val(disamount);
+});
+
+$("#invoices-hx_amount").change(function () {
+
+    if($("#invoices-hx_amount").val() == 1){
+            //var url = 'http://localhost/backend/yanpei/getgoods';
+        var pay_money = document.getElementById("invoices-rp_amount").value;
+        var user_money = document.getElementById("user_money").value;
+        if (user_money == "") user_money = 0;
+            if(parseInt(user_money) < parseInt(pay_money)){
+                alert("用户余额不足！");
+                $("#invoices-hx_amount").val('0');
+    		}
+     }
+});
+
+        function queryMember() {
+            var cardnumber = $("#cardnumber").val();
+            // alert(cardnumber);
+            var url = '/merchant/xy-store/order/order/getmember';  
+            $.ajax({
+                async:false,
+                type : 'post',
+                cache:false,
+                url:url,
+                dataType : 'json',
+                data:{'mobile':cardnumber},
+                success: function(ret) {
+                    // alert (JSON.stringify(ret));
+                        //bind data to page
+                        $("#username").html(ret['username']);
+                        $("#user_integral").html(ret['user_integral']);
+                        $("#nickname").html(ret['nickname']);
+                        $("#current_level").html(ret['current_level']);
+                        $("#created_at").html(ret['created_at']);
+                        $("#gender").html(ret['gender']);
+                        $("#arrears").html(ret['arrears']);
+                        $("#user_money").html(ret['user_money']);
+                        $("#mobile").html(ret['mobile']);
+                },
+                error: function() {
+                    alert('查询会员信息失败。');
+                }
+            });
+        }
+        $('#cardnumber').bind('keydown', function(event) {
+            if (event.keyCode == "13") {
+                queryMember();
             }
         });
-    }
-
-    // 包邮
-    $("input[name='ProductForm[shipping_type]']").click(function () {
-        var val = $(this).val();
-        if (val == '2'){
-            $('.shipping').removeClass('hide');
-            // $('.shipping').find('.form-group').addClass('required');
-            // $('.field-product-shipping_fee_type').removeClass('required');
-        }else{
-            $('.shipping').addClass('hide');
-        }
-    });
-
-    // 积分
-    $("input[name='ProductForm[point_exchange_type]']").click(function () {
-        var val = $(this).val();
-        if (val == '1'){
-            $('.shipping-point-for-now').removeClass('hide');
-            $('.shipping-point').addClass('hide');
-        }else{
-            $('.shipping-point').removeClass('hide');
-            $('.shipping-point-for-now').addClass('hide');
-        }
-    });
-
-    // 选择商品模型
-    $("select[name='ProductForm[base_attribute_id]']").change(function () {
-        var base_attribute_id = $(this).val();
-
-        // 所有选中数据
-        allData = [];
-        // 所有重组sku数据
-        allSku = [];
-        // sku值存储的数据
-        skusDataArr = [];
-        createTable();
-
-        if (!base_attribute_id || parseInt(base_attribute_id) === 0) {
-            $('.control-group').addClass('hide');
-            return;
-        }
-
-        $.ajax({
-            type : "get",
-            url : "<?= Url::to(['/product/product/base-spec-attribute']); ?>",
-            dataType : "json",
-            data : {base_attribute_id: base_attribute_id},
-            success: function(data){
-                if (parseInt(data.code) === 200) {
-                    $('.control-group').removeClass('hide');
-                    // 规格和规格值
-                    var attributeHtml = template('spec', data.data);
-                    $('.js-goods-sku').html(attributeHtml);
-                    // 参数
-                    var paramsHtml = template('attributeValue', data.data);
-                    $('.js-goods-sku-attribute').html(paramsHtml);
-                } else {
-                    rfWarning(data.message);
-                }
-            }
+        $('#query').click(function() {
+            queryMember();
         });
-    });
-
-    // 属性点击
-    $(document).on("click",".js-goods-sku span",function(){
-        var title = $(this).data('title');
-        var id = $(this).data('id');
-        var pid = $(this).data('pid');
-        var ptitle = $(this).data('ptitle');
-        if (parseInt($(this).data('type')) > 0) {
-            if ($(this).hasClass('btn-white')) {
-                $(this).removeClass('btn-white');
-                $(this).addClass('btn-primary');
-
-                // 加入规格总数组
-                addAttributes (id, title, pid, ptitle);
-            } else {
-                $(this).removeClass('btn-primary');
-                $(this).addClass('btn-white');
-
-                // 删除规格总数组
-                delAttributes (id, title, pid, ptitle);
-            }
-        }
-    });
-
-    // 批量设置
-    function batch(type) {
-        let batchText = [];
-        batchText[1] = '销售价';
-        batchText[2] = '市场价';
-        batchText[3] = '成本价 ';
-        batchText[4] = '库存 ';
-        batchText[5] = '商家编码 ';
-
-        $('.js-batch-form').removeClass('hide');
-        $('.js-batch-type').addClass('hide');
-        $('.js-batch-txt').attr('placeholder', '请输入' + batchText[type]);
-        $('.js-batch-txt').focus();
-        batchType = type;
-    }
-
-    // 报错批量设置
-    $(document).on("click",".js-batch-save",function(){
-        let batch_txt = $('.js-batch-txt');
-        let val = parseFloat(batch_txt.val());
-        if (batchType === 1 || batchType === 2 || batchType === 2) {
-            if (val > 9999999.99) {
-                rfWarning('价格最大为 9999999.99');
-                batch_txt.focus();
-                return false;
-            } else if (!/^\d+(\.\d+)?$/.test(batch_txt.val())) {
-                rfWarning('请输入合法的价格');
-                batch_txt.focus();
-                return false;
-            } else {
-                batch_txt.val(val.toFixed(2));
-            }
-        }
-
-        if (batchType === 1) {
-            $('.js-price').val(val)
-        }
-
-        if (batchType === 2) {
-            $('.js-market-price').val(val)
-        }
-
-        if (batchType === 3) {
-            $('.js-cost-price').val(val)
-        }
-
-        if (batchType === 4) {
-            if (!/^\d+$/.test(batch_txt.val())) {
-                rfWarning('请输入合法的数字');
-                batch_txt.focus();
-                return false;
-            }
-
-            $('.js-stock-num').val(val)
-        }
-
-        if (batchType === 5) {
-            $('.js-code').val(val)
-        }
-
-        $('.js-batch-txt').val('');
-        $('.js-batch-form').addClass('hide');
-        $('.js-batch-type').removeClass('hide');
-    });
-
-    // 取消批量设置
-    $(document).on("click",".js-batch-cancel",function(){
-        $('.js-batch-txt').val('');
-        $('.js-batch-form').addClass('hide');
-        $('.js-batch-type').removeClass('hide');
-    });
-
-    // 增加规格属性
-    function addAttributes (id, title, pid, ptitle, create = true) {
-
-        var set = false;
-        // 判断是否已经存在父类
-        for (let i = 0; i < allData.length; i++) {
-            if (parseInt(allData[i]['id']) === parseInt(pid)) {
-                set = true;
-            }
-        }
-
-        // 设置父类
-        if (set === false) {
-            var parent = [];
-            parent['id'] = pid;
-            parent['title'] = ptitle;
-            parent['child'] = [];
-
-            allData.push(parent);
-        }
-
-        // 写入子集
-        for (let i = 0; i < allData.length; i++) {
-            if (parseInt(allData[i]['id']) === parseInt(pid)) {
-                var child = [];
-                child['id'] = id;
-                child['title'] = title;
-                allData[i]['child'].push(child);
-            }
-        }
-
-        if (create === true) {
-            createTable();
-        }
-    }
-
-    // 删除规格属性
-    function delAttributes (id, title, pid, ptitle) {
-        // 查找父级
-        for (let i = 0; i < allData.length; i++) {
-            if (parseInt(allData[i]['id']) === parseInt(pid)) {
-                // 查找子级
-                for (let j = 0; j < allData[i]['child'].length; j++) {
-                    if (parseInt(allData[i]['child'][j]['id']) === parseInt(id)) {
-                        allData[i]['child'].splice(j, 1);
-                    }
-                }
-
-                // 判断是否所有子级为空则全删除
-                if (allData[i]['child'].length === 0) {
-                    allData.splice(i, 1);
-                }
-            }
-        }
-
-        console.log(allData)
-
-        createTable();
-    }
-
-    // 创建表格
-    function createTable() {
-        skusDataArr = [];
-        if (allData.length > 0) {
-            // 获取表格内的sku数据
-            getSkusDataArr();
-            // 创建表头
-            createTableHeader();
-            // 创建内容
-            createTableBody();
-            // 创建表格底部
-            createTableFoot();
-            // 写入表格内的sku数据
-            setSkusDataArr();
-            $('.js-spec-table').removeClass('hide');
-        } else {
-            $('.js-spec-table').addClass('hide');
-        }
-    }
-
-    // 创建表格头
-    function createTableHeader() {
-        let header = [];
-        header["data"] = [];
-        for (let i = 0; i < allData.length; i++) {
-            header["data"][i] = allData[i]['title'];
-        }
-
-        let headerHtml = template('header', header);
-        $(".js-spec-table table thead").html(headerHtml);
-    }
-
-    // 创建表格内容
-    function createTableBody() {
-        allSku = [];
-        var allNum = 1;
-        for (let i = 0; i < allData.length; i++) {
-            allNum *= allData[i]['child'].length
-        }
-
-        // 总sku
-        for (let i = 0; i < allNum; i++) {
-            allSku[i] = [];
-            allSku[i]['sku'] = '';
-            allSku[i]['child'] = [];
-        }
-
-        // 重新排序sku
-        var allLen = 1;
-        for (let i = 0; i < allData.length; i++) {
-            var nowLen = 0;
-            var child = allData[i]['child'];
-            // 每个循环次数
-            var childCirculationNum = (allNum / allLen) / child.length;
-
-            for (let j = 0; j < allLen; j++) {
-                // 子级每次循环
-                for (let k = 0; k < child.length; k++) {
-                    for (let z = 0; z < childCirculationNum; z++) {
-                        // 设置sku
-                        let str = allSku[nowLen]['sku'].length > 0 ? '-' : '';
-                        allSku[nowLen]['sku'] = allSku[nowLen]['sku'] + str + child[k]['id'];
-                        // 设置属性名称
-                        allSku[nowLen]['child'].push(child[k]);
-
-                        nowLen++;
-                    }
-                }
-            }
-
-            allLen *= child.length;
-        }
-
-        // 渲染
-        let body = [];
-        body["data"] = allSku;
-        $(".js-spec-table table tbody").html(template('body', body));
-    }
-
-    // 创建表格底部
-    function createTableFoot() {
-        let data = [];
-        data['colspan']  = allData.length + 5;
-
-        let html = template('foot', data);
-        $(".js-spec-table table tfoot").html(html);
-    }
-
-    // 获取sku存储的数据
-    function getSkusDataArr() {
-        $(".js-spec-table table tbody tr").each(function () {
-            let skuId = $(this).attr('id');
-            let data = [];
-            data['sku'] = skuId;
-            data['picture'] = $(this).find('.js-picture').val();
-            data['price'] = $(this).find('.js-price').val();
-            data['marketPrice'] = $(this).find('.js-market-price').val();
-            data['costPrice'] = $(this).find('.js-cost-price').val();
-            data['stock'] = $(this).find('.js-stock-num').val();
-            data['code'] = $(this).find('.js-code').val();
-
-            skusDataArr[skuId] = [];
-            skusDataArr[skuId] = data;
-        });
-
-        return skusDataArr;
-    }
-
-    // 写入sku存储的数据
-    function setSkusDataArr() {
-        $(".js-spec-table table tbody tr").each(function () {
-            let skuId = $(this).attr('id');
-            if (skusDataArr.hasOwnProperty(skuId)) {
-                $(this).find('.js-picture').val(skusDataArr[skuId]['picture']);
-                if (skusDataArr[skuId]['picture'].length > 0) {
-                    $(this).find('.selectImage').attr('src', skusDataArr[skuId]['picture']);
-                } else {
-                    $(this).find('.selectImage').attr('src', defaultAddImg);
-                }
-
-                $(this).find('.js-price').val(skusDataArr[skuId]['price']);
-                $(this).find('.js-market-price').val(skusDataArr[skuId]['marketPrice']);
-                $(this).find('.js-cost-price').val(skusDataArr[skuId]['costPrice']);
-                $(this).find('.js-stock-num').val(skusDataArr[skuId]['stock']);
-                $(this).find('.js-code').val(skusDataArr[skuId]['code']);
-            } else {
-                $(this).find('.selectImage').attr('src', defaultAddImg);
-            }
-        });
-    }
-</script>
+JS;
+$this->registerJs($js);
+?>

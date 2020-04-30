@@ -4,6 +4,7 @@ namespace addons\XyStore\merchant\modules\order\controllers;
 
 use addons\XyStore\common\components\PreviewHandler;
 use addons\XyStore\common\enums\DecimalReservationEnum;
+use addons\XyStore\common\models\order\OrderProduct;
 use addons\XyStore\common\models\product\Product;
 use addons\XyStore\common\models\SettingForm;
 use addons\XyStore\merchant\forms\ProductForm;
@@ -354,13 +355,34 @@ class OrderController extends BaseController
 
         return $this->message("删除失败", $this->redirect(['index']), 'error');
     }
-
+    /**
+     * Creates a new Order model.
+     * If creation is successful, the browser will be redirected to the 'view' page.
+     * @return mixed
+     */
+    public function actionCreate()
+    {
+        $model = new Order();
+        $order_sn = date('Ymd').substr(implode(NULL, array_map('ord', str_split(substr(uniqid(), 7, 13), 1))), 0, 8);
+        if(!Order::find()->where(['order_sn' => $order_sn])->exists()){
+            $model->order_sn = 'XS'.$order_sn;
+        }
+        if ($model->load(Yii::$app->request->post()) && $model->save()) {
+            return $this->redirect(['view', 'id' => $model->id]);
+        }
+        return $this->render('create', [
+            'model' => $model,
+            'product' => Yii::$app->xyStoreService->product->getMapList(),
+            //'cates' => Yii::$app->xyStoreService->productCate->getMapList(),
+            //'product' => Yii::$app->xyStoreService->product->getMapByList($model->product),
+        ]);
+    }
     /**
      * 编辑/创建
      *
      * @return mixed
      */
-    public function actionCreate()
+    public function actionEdit()
     {
             $model = new ProductForm();
             $model->merchant_id = $this->getMerchantId();
@@ -404,7 +426,7 @@ class OrderController extends BaseController
         // 配置
         $setting = new SettingForm();
         $setting->attributes = $this->getConfig();
-        return $this->render('create', [
+        return $this->render('edit', [
             'model' => $model,
             'cates' => Yii::$app->xyStoreService->productCate->getMapList(),
             'brands' => Yii::$app->xyStoreService->productBrand->getMapList(),
@@ -422,6 +444,33 @@ class OrderController extends BaseController
             'setting' => $setting,
         ]);
     }
+
+    public function actionGetmember()
+    {
+        $request = Yii::$app->request;
+        $mobile = $request->post('mobile');
+        if ($mobile)
+        {
+//            $memberData = Member::findOne(['mobile'=>$mobile]);
+            $memberData = Yii::$app->xyStoreService->member->findByQuary($mobile);
+            $memberID = $memberData->id;
+            $memberAcount['id'] = $memberID;
+            $memberAcount['mobile'] = $memberData->mobile;
+            $memberAcount['username'] = $memberData->username;
+            $memberAcount['nickname'] = $memberData->nickname;
+            $memberAcount['created_at'] = $memberData->created_at;
+            $memberAcount['current_level'] = $memberData->current_level;
+            $memberAcount['gender'] = $memberData->gender;
+            $accountData = Yii::$app->xyStoreService->member->findAccount($memberID);
+//            $accountData = Account::findOne(['member_id'=>$memberID]);
+            $memberAcount['user_integral'] = $accountData->user_integral;
+            $memberAcount['user_money'] = $accountData->user_money;
+            $memberAcount['arrears'] = $accountData->arrears;
+            $data = json_encode($memberAcount,true);
+            return $data;
+        }
+    }
+
     /**
      * @param $id
      * @return Order
@@ -435,5 +484,15 @@ class OrderController extends BaseController
         }
 
         return $model;
+    }
+
+    public  function  actionGetattribute()
+    {
+        $request = Yii::$app->request;
+        $productid = $request->post('product_id');
+        if ($productid) {
+            $data = Yii::$app->xyStoreService->productSpecValue->getListByProductId($productid);
+        }
+        return $data;
     }
 }

@@ -378,7 +378,7 @@ class ProductForm extends \addons\XyStore\common\models\product\Product
             $baseSpecId = $model['base_spec_id'];
             if (in_array($baseSpecId, $specIds)) {
                 $model->title = $tmpBaseSpec[$baseSpecId]['title'] ?? '';
-                $model->show_type = $tmpBaseSpec[$baseSpecId]['show_type'] ?? '';
+                $model->show_type = $tmpBaseSpec[$baseSpecId]['show_type'] ?? '1';
                 $model->sort = $specData[$baseSpecId];
                 if (!$model->save()) {
                     throw new NotFoundHttpException(Yii::$app->debris->analyErr($model->getFirstErrors()));
@@ -400,7 +400,7 @@ class ProductForm extends \addons\XyStore\common\models\product\Product
                     'base_spec_id' => $key,
                     'title' => $tmpBaseSpec[$key]['title'] ?? '',
                     'sort' => $value,
-                    'show_type' => $tmpBaseSpec[$key]['show_type'] ?? '',
+                    'show_type' => $tmpBaseSpec[$key]['show_type'] ?? '1',
                 ];
             }
         }

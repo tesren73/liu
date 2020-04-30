@@ -389,4 +389,26 @@ class ProductService extends Service
             ->orderBy('id asc')
             ->all();
     }
+
+    /**
+     * @return array
+     */
+    public function getMapList()
+    {
+        return ArrayHelper::map($this->getAllList(), 'id', 'name');
+    }
+
+    /**
+     * @return array|\yii\db\ActiveRecord[]
+     */
+    public function getAllList()
+    {
+        return Product::find()
+            ->where(['status' => StatusEnum::ENABLED])
+            ->andFilterWhere(['merchant_id' => $this->getMerchantId()])
+            ->orderBy('id desc')
+            ->asArray()
+            ->all();
+    }
+
 }
