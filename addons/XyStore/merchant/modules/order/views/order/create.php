@@ -69,48 +69,41 @@ $this->params['breadcrumbs'][] = $this->title;
                 <table width="100%">
                     <tbody>
                         <tr>
-                            <td>
-                                <?= $form->field($model, 'modelProduct')->widget(MultipleInput::className(), [
+                            <td><h4>商品信息</h4>
+                                <?= $form->field($modelProduct, 'modelProduct')->widget(MultipleInput::className(), [
                                     'max' => 10,
                                     'cloneButton' => true,
+
                                     'columns' => [
                                         [
-                                            'name'  => 'name',
+                                            'name'  => 'product_id',
                                             'type'  => 'dropDownList',
                                             'title' => '商品名称',
                                             'enableError' => true,
-                                            'items'  => '',
+                                            'items'  => $product,
                                             'options' => [
+                                                'style' => 'width: 120px;',
                                                 'class' => 'input-priority'
                                             ]
                                         ],
                                         [
                                             'name'  => 'attribute',
                                             'title' => '商品属性',
-                                            'type'  => 'dropDownList',
                                             'enableError' => true,
-                                            'items'  => '',
-                                            'options' => [
-                                                'class' => 'input-priority'
-                                            ]
-                                        ],
-                                        [
-                                            'name'  => 'attribute_value',
-                                            'title' => '商品属性值',
-                                            'type'  => 'dropDownList',
-                                            'enableError' => true,
+                                            'items'  =>  '',
                                             'options' => [
                                                 'readonly' => true,
+                                                'style' => 'width: 180px;',
                                                 'class' => 'input-priority'
                                             ]
                                         ],
                                         [
-                                            'name'  => 'spec',
+                                            'name'  => 'sku_id',
                                             'title' => '度数',
                                             'defaultValue' => 0,
                                             'enableError' => true,
                                             'options' => [
-                                                'readonly' => true,
+                                                'style' => 'width: 50px;',
                                                 'class' => 'input-priority'
                                             ]
                                         ],
@@ -120,16 +113,17 @@ $this->params['breadcrumbs'][] = $this->title;
                                             'defaultValue' => 0,
                                             'enableError' => true,
                                             'options' => [
-                                                'readonly' => true,
+                                                'style' => 'width: 50px;',
                                                 'class' => 'input-priority'
                                             ]
                                         ],
                                         [
-                                            'name'  => 'qty',
+                                            'name'  => 'num',
                                             'title' => '数量',
                                             'defaultValue' => 1,
                                             'enableError' => true,
                                             'options' => [
+                                                'style' => 'width: 50px;',
                                                 'class' => 'input-priority'
                                             ]
                                         ],
@@ -139,6 +133,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                             'defaultValue' => 0.00,
                                             'enableError' => true,
                                             'options' => [
+                                                'style' => 'width: 50px;',
                                                 'class' => 'input-priority'
                                             ]
                                         ]
@@ -175,7 +170,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <td><?= $form->field($model, 'operator_id')->textInput(['maxlength' => true,'value' => Yii::$app->user->identity->username,'readonly' => true])->label(false);?></td>
                             <th>订单状态</th>
                             <td><?= $form->field($model, 'order_status')->dropDownList([
-                                    'data' => '',
+
                                 ])->label(false);?></td>
                             <th>审核人：</th>
                             <td>&nbsp;</td>
@@ -200,12 +195,10 @@ $this->params['breadcrumbs'][] = $this->title;
 $js = <<<JS
 $(document).on('change', 'select', function(){
     var selectnum = $("#w1 option:selected").text();//监听select改变，获取下拉选项值
-
-   var string_id=$(this).attr('id');  //order-modelproduct-0-name
+    var string_id=$(this).attr('id');  //order-modelproduct-0-name
     var number = document.getElementById(string_id).value;
-    if(string_id.indexOf("name") != -1){
-
-        var url = '/merchant/order/order/getattribute';
+    if(string_id.indexOf("product_id") != -1){
+        var url = '/merchant/xy-store/order/order/getattribute';
     	$.ajax({
     	    async:false,
     		type : 'post',
@@ -214,10 +207,10 @@ $(document).on('change', 'select', function(){
             dataType : 'json',
     		data:{'product_id':number},   //传值到控制器，获取相应数据
     		success : function(data){
-                 $("#user_integral").val(data['user_integral']);
-                $("#user_money").val(data['user_money']);
-                $("#mobile").val(data['mobile']);
-                $("#current_level").val(data['current_level']);
+    	        alert (JSON.stringify(data));
+                $("#orderproduct-modelproduct-0-attribute").val(data['attribute']);
+                $("#orderproduct-modelproduct-0-sku_id").val(data['spec_value'][0]);
+                $("#orderproduct-modelproduct-0-spec_value").val(data['spec_value'][1]);
     		},
     	    error: function(XMLHttpRequest, textStatus, errorThrown) {
                                    //alert (errorThrown);

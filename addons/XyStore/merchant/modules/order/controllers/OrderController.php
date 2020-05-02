@@ -4,8 +4,11 @@ namespace addons\XyStore\merchant\modules\order\controllers;
 
 use addons\XyStore\common\components\PreviewHandler;
 use addons\XyStore\common\enums\DecimalReservationEnum;
+use addons\XyStore\common\models\product\Spec;
+use addons\XyStore\common\models\product\SpecValue;
 use addons\XyStore\common\models\order\OrderProduct;
 use addons\XyStore\common\models\product\Product;
+use addons\XyStore\common\models\product\AttributeValue;
 use addons\XyStore\common\models\SettingForm;
 use addons\XyStore\merchant\forms\ProductForm;
 use Yii;
@@ -363,6 +366,7 @@ class OrderController extends BaseController
     public function actionCreate()
     {
         $model = new Order();
+        $modelProduct = new OrderProduct();
         $order_sn = date('Ymd').substr(implode(NULL, array_map('ord', str_split(substr(uniqid(), 7, 13), 1))), 0, 8);
         if(!Order::find()->where(['order_sn' => $order_sn])->exists()){
             $model->order_sn = 'XS'.$order_sn;
@@ -372,6 +376,7 @@ class OrderController extends BaseController
         }
         return $this->render('create', [
             'model' => $model,
+            'modelProduct' => $modelProduct,
             'product' => Yii::$app->xyStoreService->product->getMapList(),
             //'cates' => Yii::$app->xyStoreService->productCate->getMapList(),
             //'product' => Yii::$app->xyStoreService->product->getMapByList($model->product),
@@ -492,7 +497,23 @@ class OrderController extends BaseController
         $productid = $request->post('product_id');
         if ($productid) {
             $data = Yii::$app->xyStoreService->productSpecValue->getListByProductId($productid);
+            // attribute
+            $attribute = '';
+            $attributes = AttributeValue::find()->andWhere('product_id = :product_id',[':product_id' => $productid])->all();
+            foreach ($attributes as $datum) {
+                $attribute .= $datum['title'].':'.$datum['value'];
+            }
+            $data['attribute'] = $attribute;
+            //spec
+            $productSpec = Spec::find()->select('base_spec_id','title')->andWhere('product_id = :product_id',[':product_id' => $productid])->asArray()->all();
+            //spec_value
+            $productSpecValue = SpecValue::find()->select('base_spec_value_id','title')->andWhere('product_id = :product_id',[':product_id' => $productid])->asArray()->all();
+            $producttemp = ' ';
+            foreach ($productSpec as $k => $spec) {
+                $producttemp .= $spec[$k]['title'].':'.$productSpecValue[$k]['title'];
+            }
+            $data['spec_value'] = $productSpecValue;
+            return json_encode($data);
         }
-        return $data;
     }
 }
