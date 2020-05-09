@@ -4,6 +4,7 @@ namespace addons\XyStore\merchant\modules\order\controllers;
 
 use addons\XyStore\common\components\PreviewHandler;
 use addons\XyStore\common\enums\DecimalReservationEnum;
+use addons\XyStore\common\models\order\Action;
 use addons\XyStore\common\models\product\Spec;
 use addons\XyStore\common\models\product\SpecValue;
 use addons\XyStore\common\models\order\OrderProduct;
@@ -11,6 +12,7 @@ use addons\XyStore\common\models\product\Product;
 use addons\XyStore\common\models\product\AttributeValue;
 use addons\XyStore\common\models\SettingForm;
 use addons\XyStore\merchant\forms\ProductForm;
+use function GuzzleHttp\Promise\all;
 use Yii;
 use yii\data\Pagination;
 use yii\db\ActiveQuery;
@@ -366,87 +368,89 @@ class OrderController extends BaseController
     public function actionCreate()
     {
         $model = new Order();
+        $model->merchant_id = $this->getMerchantId();
         $modelProduct = new OrderProduct();
         $order_sn = date('Ymd').substr(implode(NULL, array_map('ord', str_split(substr(uniqid(), 7, 13), 1))), 0, 8);
-        if(!Order::find()->where(['order_sn' => $order_sn])->exists()){
-            $model->order_sn = 'XS'.$order_sn;
+        if(!(Order::find()->where(['order_sn' => $order_sn])->exists())){
+             $model->order_sn = 'XS'.$order_sn;
         }
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
-        }
-        return $this->render('create', [
-            'model' => $model,
-            'modelProduct' => $modelProduct,
-            'product' => Yii::$app->xyStoreService->product->getMapList(),
-            //'cates' => Yii::$app->xyStoreService->productCate->getMapList(),
-            //'product' => Yii::$app->xyStoreService->product->getMapByList($model->product),
-        ]);
-    }
-    /**
-     * 编辑/创建
-     *
-     * @return mixed
-     */
-    public function actionEdit()
-    {
-            $model = new ProductForm();
-            $model->merchant_id = $this->getMerchantId();
-            $model->loadDefaultValues();
-        $model->defaultMemberDiscount = Yii::$app->xyStoreService->productMemberDiscount->getLevelListByProductId($id);
-        $model->member_level_decimal_reservation = $model->defaultMemberDiscount[0]['decimal_reservation_number'] ?? DecimalReservationEnum::DEFAULT;
-
-        if ($model->load(Yii::$app->request->post()))
-        {
+        if (Yii::$app->request->isAjax && $model->load(Yii::$app->request->post())) {
             $data = Yii::$app->request->post();
+            // 开启事务
             $transaction = Yii::$app->db->beginTransaction();
             try {
-                // 订单来源
-                $data->order_from = Yii::$app->user->identity->group;
                 // 载入数据并验证
-                $order = Yii::$app->xyStoreService->order->create($model);
-                //if ($model->save()) {
-                    //return $this->redirect(['view', 'id' => $model->id]);
-                //}
-                // 消耗积分
-//                if ($order->point > 0) {
-//                    Yii::$app->services->memberCreditsLog->decrInt(new CreditsLogForm([
-//                        'member' => $model->member,
-//                        'num' => $order->point,
-//                        'credit_group' => 'orderCreate',
-//                        'map_id' => $order->id,
-//                        'remark' => '【门店】订单支付',
-//                    ]));
-//                }
-
+            $model->order_type = 1;
+            $model->payment_type = 1; //支付类型
+            $model->shipping_type = 1; //配送方式
+            $model->order_from = 1;
+            $model->buyer_id = $data['buyer'] ?? [];
+            $model->user_name = $data['user_name'] ?? [];
+            $model->product_money = $data['Order']['order_money'] ?? [];
+            $model->order_money = $data['Order']['order_money'] ?? [];
+            $model->user_platform_money = $data['Order']['user_money'] ?? [];
+            $model->shipping_money = $data['Order']['shipping_money'] ?? [];
+            $model->pay_money = $data['Order']['pay_money'] ?? [];
+            $model->order_status = $data['order_status'] ?? [];
+            $model->pay_status = $data['pay_status'] ?? [];
+            $model->pay_time = $data['Order']['pay_money'] ? time() : '';
+            $model->finish_time = $data['Order']['pay_money'] ? time() : '';
+            $model->product_count = count($data['Order']['products']) ?? [];
+            $model->operator_id = Yii::$app->user->identity->id;
+            $model->status = 1;
+            $model->created_at = time();
+            $model->updated_at = time();
+            $model->save(false);
+            //得到上次插入的Insert id
+            $order_id = $model->attributes['id'];
+            //order_product
+            foreach($data['Order']['products'] as $products)
+            {
+                $modelProduct->order_id = $order_id;
+                $modelProduct->member_id = $data['buyer'] ?? [];
+                $modelProduct->merchant_id = $model->merchant_id;
+                $modelProduct->product_id = $products['product_id'] ?? [];
+                $modelProduct->product_name = $products['product_name'] ?? [];
+                $modelProduct->sku_id = $products['degrees'] ?? [];
+                $modelProduct->sku_name = $products['sku_name'] ?? [];
+                $modelProduct->price = $products['price'] ?? [];
+                $modelProduct->num = $products['qty'] ?? [];
+                $modelProduct->product_money = $data['Order']['order_money'] ?? [];
+                $modelProduct->buyer_id = $data['buyer'] ?? [];
+                $modelProduct->order_type = 1;
+                $modelProduct->order_status = 1;
+                $modelProduct->refund_type = 0;
+                $modelProduct->status = 1;
+                $modelProduct->created_at = time();
+                $modelProduct->updated_at = time();
+                $modelProduct->save(false);
+                //order_action
+                $modelAction = new Action();
+                $orderAction['order_id'] = $order_id;
+                $orderAction['action'] = '门店订单';
+                $orderAction['member_id'] = $data['buyer'] ?? [];
+                $orderAction['member_name'] = $data['user_name'] ?? [];
+                $orderAction['order_status'] = 1;
+                $orderAction['status'] = 1;
+                $orderAction['created_at'] = time();
+                $orderAction['updated_at'] = time();
+                $modelAction->attributes = $orderAction;
+                $modelAction->save(false);
+            }
                 $transaction->commit();
                 return ResultHelper::json(200, '操作成功');
-
             } catch (\Exception $e) {
                 $transaction->rollBack();
+
                 return ResultHelper::json(422, $e->getMessage());
             }
         }
-        // 获取参数、规格和规格值、已选规格值
-        list($attributeValue, $specValue, $specValuejsData) = Yii::$app->xyStoreService->product->getSpecValueAttribute($model);
-        // 配置
-        $setting = new SettingForm();
-        $setting->attributes = $this->getConfig();
-        return $this->render('edit', [
-            'model' => $model,
-            'cates' => Yii::$app->xyStoreService->productCate->getMapList(),
-            'brands' => Yii::$app->xyStoreService->productBrand->getMapList(),
-            'supplier' => Yii::$app->xyStoreService->baseSupplier->getMapList(),
-            'companys' => Yii::$app->xyStoreService->expressCompany->getMapList(), // 快递物流
-            'skus' => Yii::$app->xyStoreService->productSku->findByProductId($id),
-            'baseAttribute' => Yii::$app->xyStoreService->baseAttribute->getMapList(), // 基础类型
-            'attributeValue' => $attributeValue,
-            'specValue' => $specValue,
-            'specValuejsData' => $specValuejsData,
-            'productStatusExplain' => Product::$productStatusExplain,
-            'commissionRate' => $commissionRate,
-            'virtualType' => $virtualType,
-            'virtual_group' => $virtual_group,
-            'setting' => $setting,
+         // 获取参数、规格和规格值、已选规格值
+//        list($attributeValue, $specValue, $specValuejsData) = Yii::$app->xyStoreService->product->getSpecValueAttribute($model);
+        // 阶梯折扣
+        return $this->render('create', [
+             'model' => $model,
+            'product' => Yii::$app->xyStoreService->product->getMapList(),
         ]);
     }
 
@@ -491,29 +495,21 @@ class OrderController extends BaseController
         return $model;
     }
 
-    public  function  actionGetattribute()
+    public function actionAttribute()
     {
-        $request = Yii::$app->request;
-        $productid = $request->post('product_id');
-        if ($productid) {
-            $data = Yii::$app->xyStoreService->productSpecValue->getListByProductId($productid);
-            // attribute
-            $attribute = '';
-            $attributes = AttributeValue::find()->andWhere('product_id = :product_id',[':product_id' => $productid])->all();
-            foreach ($attributes as $datum) {
-                $attribute .= $datum['title'].':'.$datum['value'];
+        $id = Yii::$app->request->post('product_id');
+        if($id)
+        {
+            $temp = AttributeValue::find()->select(['title','value'])->andWhere('product_id = :id',[':id'=>$id])->asArray()->all();
+            $tempAttr='';
+            foreach($temp as $item)
+            {
+                $tempAttr .= $item['title'] .'-'. $item['value'];
             }
-            $data['attribute'] = $attribute;
-            //spec
-            $productSpec = Spec::find()->select('base_spec_id','title')->andWhere('product_id = :product_id',[':product_id' => $productid])->asArray()->all();
-            //spec_value
-            $productSpecValue = SpecValue::find()->select('base_spec_value_id','title')->andWhere('product_id = :product_id',[':product_id' => $productid])->asArray()->all();
-            $producttemp = ' ';
-            foreach ($productSpec as $k => $spec) {
-                $producttemp .= $spec[$k]['title'].':'.$productSpecValue[$k]['title'];
-            }
-            $data['spec_value'] = $productSpecValue;
-            return json_encode($data);
+            $data['attribute'] = $tempAttr;
+            $data['degrees'] = SpecValue::find()->select(['id','title'])->andWhere('base_spec_id = 1 and product_id = :id',[':id'=>$id])->asArray()->all();
+            $data['astigmia'] = SpecValue::find()->select(['id','title'])->andWhere('base_spec_id = 2 and product_id = :id',[':id'=>$id])->asArray()->all();
+            return json_encode($data,true);
         }
     }
 }

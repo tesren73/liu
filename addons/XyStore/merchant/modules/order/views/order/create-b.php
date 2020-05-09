@@ -26,7 +26,7 @@ $this->params['breadcrumbs'][] = $this->title;
             </ul>
             <div class="tab-content">
                 <div class="tab-pane active p-xs" id="tab_1">
-                    <?= $this->render('_specification', [
+                   <?= $this->render('_specification', [
                         'model' => $model,
                         'form' => $form,
                         'specValue' => $specValue,
@@ -153,15 +153,16 @@ $this->params['breadcrumbs'][] = $this->title;
 
         // 序列化数据
         var data = $('#productForm').serializeArray();
-        // console.log(data);
+         //console.log(data);
 
         submitStatus = false;
-        $.ajax({
+         $.ajax({
             type : "post",
             url : "<?= Url::to(['create', 'id' => $model->id, 'virtual_group' => $virtual_group]); ?>",
             dataType : "json",
             data : data,
             success: function(data) {
+                console.log(data);
                 submitStatus = true;
                 if (parseInt(data.code) === 200) {
                     swal("操作成功", "小手一抖就打开了一个框", "success").then((value) => {

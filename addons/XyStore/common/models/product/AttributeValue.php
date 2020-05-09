@@ -2,6 +2,7 @@
 namespace addons\XyStore\common\models\product;
 
 use common\behaviors\MerchantBehavior;
+use common\helpers\ArrayHelper;
 use Yii;
 
 /**
@@ -60,4 +61,5 @@ class AttributeValue extends \common\models\base\BaseModel
             'updated_at' => 'Updated At',
         ];
     }
+
 }

@@ -2,6 +2,7 @@
 
 namespace addons\XyStore\common\models\product;
 
+use common\helpers\ArrayHelper;
 use common\helpers\StringHelper;
 use Yii;
 use yii\db\ActiveQuery;
@@ -546,4 +547,5 @@ class Product extends \common\models\base\BaseModel
 
         parent::afterSave($insert, $changedAttributes);
     }
+
 }

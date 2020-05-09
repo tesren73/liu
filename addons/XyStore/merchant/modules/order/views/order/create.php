@@ -1,6 +1,8 @@
 <?php
 
+use common\helpers\ArrayHelper;
 use common\helpers\Html;
+use common\helpers\Url;
 use unclead\multipleinput\MultipleInput;
 use yii\widgets\ActiveForm;
 use kartik\select2\Select2;
@@ -12,6 +14,7 @@ use kartik\select2\Select2;
 $this->title = '销售单';
 $this->params['breadcrumbs'][] = ['label' => 'Orders', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
+
 ?>
 
 <div class="row">
@@ -35,142 +38,158 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td colspan="2"><?= $form->field($model, 'order_sn')->textInput(['maxlength' => true])->label(false);?></td>
                     </tr>
                     <tr>
-                        <td colspan="6">
-                            <h4>会员信息</h4>
+                        <th >会员ID:</th>
+                        <td colspan="5"><?= Html::textInput('buyer', '', [
+                                'class' => 'form-control buyer',
+                                'style' => 'width:100px',
+                                'readonly' => true,
+                            ]) ?>
                         </td>
                     </tr>
                     <tr>
                         <th>姓名</th>
-                        <td id="username">-</td>
+                        <td><?= Html::textInput('user_name', '', [
+                                'class' => 'form-control user_name',
+                                'readonly' => true,
+                            ]) ?></td>
                         <th>性别</th>
-                        <td id="gender">-</td>
+                        <td><?= Html::textInput('gender', '', [
+                                'class' => 'form-control gender',
+                                'readonly' => true,
+                            ]) ?></td>
                         <th>积分</th>
-                        <td id="user_integral">-</td>
+                        <td ><?= Html::textInput('user_integral', '', [
+                                'class' => 'form-control attribute',
+                                'readonly' => true,
+                            ]) ?></td>
                     </tr>
                     <tr>
                         <th>昵称</th>
-                        <td id="nickname">-</td>
+                        <td><?= Html::textInput('nickname', '', [
+                                'class' => 'form-control attribute',
+                                'readonly' => true,
+                            ]) ?></td>
                         <th>会员级别</th>
-                        <td id="current_level">-</td>
+                        <td><?= Html::textInput('current_level', '', [
+                                'class' => 'form-control attribute',
+                                'readonly' => true,
+                            ]) ?></td>
                         <th>登记日期</th>
-                        <td id="created_at">-</td>
+                        <td><?= Html::textInput('created_at', '', [
+                                'class' => 'form-control attribute',
+                                'readonly' => true,
+                            ]) ?></td>
                     </tr>
                     <tr>
                         <th>账户金额(元)</th>
-                        <td id="user_money">-</td>
+                        <td><?= Html::textInput('user_money', '', [
+                                'class' => 'form-control attribute',
+                                'readonly' => true,
+                            ]) ?></td>
                         <th>手机号</th>
-                        <td id="mobile">-</td>
+                        <td><?= Html::textInput('mobile', '', [
+                                'class' => 'form-control attribute',
+                                'readonly' => true,
+                            ]) ?></td>
                         <th>欠款金额(元)</th>
-                        <td id="arrears">-</tdarea_id>
+                        <td><?= Html::textInput('arrears', '', [
+                                'class' => 'form-control attribute',
+                                'readonly' => true,
+                            ]) ?></td>
                     </tr>
                 </table>
             </div>
-            <div class="col-md-12">
-                <table width="100%">
-                    <tbody>
-                        <tr>
-                            <td><h4>商品信息</h4>
-                                <?= $form->field($modelProduct, 'modelProduct')->widget(MultipleInput::className(), [
-                                    'max' => 10,
-                                    'cloneButton' => true,
-
-                                    'columns' => [
-                                        [
-                                            'name'  => 'product_id',
-                                            'type'  => 'dropDownList',
-                                            'title' => '商品名称',
-                                            'enableError' => true,
-                                            'items'  => $product,
-                                            'options' => [
-                                                'style' => 'width: 120px;',
-                                                'class' => 'input-priority'
-                                            ]
-                                        ],
-                                        [
-                                            'name'  => 'attribute',
-                                            'title' => '商品属性',
-                                            'enableError' => true,
-                                            'items'  =>  '',
-                                            'options' => [
-                                                'readonly' => true,
-                                                'style' => 'width: 180px;',
-                                                'class' => 'input-priority'
-                                            ]
-                                        ],
-                                        [
-                                            'name'  => 'sku_id',
-                                            'title' => '度数',
-                                            'defaultValue' => 0,
-                                            'enableError' => true,
-                                            'options' => [
-                                                'style' => 'width: 50px;',
-                                                'class' => 'input-priority'
-                                            ]
-                                        ],
-                                        [
-                                            'name'  => 'spec_value',
-                                            'title' => '散光',
-                                            'defaultValue' => 0,
-                                            'enableError' => true,
-                                            'options' => [
-                                                'style' => 'width: 50px;',
-                                                'class' => 'input-priority'
-                                            ]
-                                        ],
-                                        [
-                                            'name'  => 'num',
-                                            'title' => '数量',
-                                            'defaultValue' => 1,
-                                            'enableError' => true,
-                                            'options' => [
-                                                'style' => 'width: 50px;',
-                                                'class' => 'input-priority'
-                                            ]
-                                        ],
-                                        [
-                                            'name'  => 'price',
-                                            'title' => '单价',
-                                            'defaultValue' => 0.00,
-                                            'enableError' => true,
-                                            'options' => [
-                                                'style' => 'width: 50px;',
-                                                'class' => 'input-priority'
-                                            ]
-                                        ]
-                                    ]
-                                ])->label(false); ?>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="col-md-12">
+                    <h4>商品信息</h4>
+                    <?= $form->field($model, 'products')->widget(MultipleInput::class, [
+                        'max' => 10,
+                        'cloneButton' => true,
+                        'columns' => [
+                            [
+                                'name'  => 'product_id',
+                                'type'  => 'dropDownList',
+                                'title' => '商品分类',
+                                'items' => $product,
+                                'options' => [
+                                    'class' => 'form-control',
+                                    'style' => 'width:100px',
+                                ]
+                            ],
+                            [
+                                'name'  => 'attribute',
+                                'title' => '商品属性',
+                                'enableError' => true,
+                                'options' => [
+                                    'readonly' => true,
+                                    'style' => 'width:200px',
+                                ]
+                            ],
+                            [
+                                'name'  => 'degrees',
+                                'title' => '度数',
+                                'type'  => 'dropDownList',
+                                'items' => [],
+                                'options' => [
+                                    'class' => 'form-degrees',
+                                    'style' => 'width:80px',
+                                ]
+                            ],
+                            [
+                                'name'  => 'astigmia',
+                                'title' => '散光',
+                                'type'  => 'dropDownList',
+                                'items' => [],
+                                'options' => [
+                                    'class' => 'form-astigmia',
+                                    'style' => 'width:80px',
+                                ]
+                            ],
+                            [
+                                'name'  => 'qty',
+                                'title' => '数量',
+                                'defaultValue' => 1,
+                                'enableError' => true,
+                                'options' => [
+                                ]
+                            ],
+                            [
+                                'name'  => 'price',
+                                'title' => '单价',
+                                'defaultValue' => 0.00,
+                                'enableError' => true,
+                                'options' => [
+                                ]
+                            ]
+                        ]
+                    ])->label(false); ?>
                 </div>
+
                 <div class="col-md-12">
                     <h4>收款信息</h4>
                     <table class="table table-bordered">
                         <tr>
                             <th>总金额：</th>
-                            <td><?= $form->field($model, 'order_money')->textInput(['maxlength' => true])->label(false);?></td>
+                            <td><?= $form->field($model, 'order_money')->textInput(['maxlength' => true,'value' => 0])->label(false);?></td>
                             <th>消耗积分：</th>
-                            <td><?= $form->field($model, 'point')->textInput(['maxlength' => true])->label(false);?></td>
+                            <td><?= $form->field($model, 'point')->textInput(['maxlength' => true,'value' => 0])->label(false);?></td>
                             <th>承担费用：</th>
-                            <td><?= $form->field($model, 'shipping_money')->textInput(['maxlength' => true])->label(false);?></td>
+                            <td><?= $form->field($model, 'shipping_money')->textInput(['maxlength' => true,'value' => 0])->label(false);?></td>
                         </tr>
                         <tr>
                             <th>结算账户：</th>
                             <td><?= $form->field($model, 'payment_type')->dropDownList([
-                                    'data' => '',
+                                    '1' => '1',
                                 ])->label(false);?></td>
                             <th>付款金额：</th>
-                            <td><?= $form->field($model, 'pay_money')->textInput(['maxlength' => true])->label(false);?></td>
+                            <td><?= $form->field($model, 'pay_money')->textInput(['maxlength' => true,'value' => 0])->label(false);?></td>
                             <th>余额支付：</th>
-                            <td><?= $form->field($model, 'user_money')->textInput()->label(false);?></td>
+                            <td><?= $form->field($model, 'user_money')->textInput(['value' => 0])->label(false);?></td>
                         </tr>
                         <tr>
                             <th>制单人：</th>
-                            <td><?= $form->field($model, 'operator_id')->textInput(['maxlength' => true,'value' => Yii::$app->user->identity->username,'readonly' => true])->label(false);?></td>
+                            <td></td>
                             <th>订单状态</th>
-                            <td><?= $form->field($model, 'order_status')->dropDownList([
-
+                            <td><?= $form->field($model, 'order_status')->dropDownList(['1'=>'1'
                                 ])->label(false);?></td>
                             <th>审核人：</th>
                             <td>&nbsp;</td>
@@ -179,7 +198,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div>
                 <div class="form-group">
                     <div class="col-sm-12 text-center">
-                        <button class="btn btn-primary" type="submit">保存</button>
+                        <button class="btn btn-primary" type="button" onclick="beforSubmit()">保存</button>
                         <span class="btn btn-white" onclick="history.go(-1)">返回</span>
                     </div>
                 </div>
@@ -189,16 +208,16 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
 
-<!--添加模板-->
-
 <?php
 $js = <<<JS
+
 $(document).on('change', 'select', function(){
     var selectnum = $("#w1 option:selected").text();//监听select改变，获取下拉选项值
-    var string_id=$(this).attr('id');  //order-modelproduct-0-name
+    var string_id=$(this).attr('id');  //order-products-0-product_id
+    var sid=string_id.split("-");
     var number = document.getElementById(string_id).value;
     if(string_id.indexOf("product_id") != -1){
-        var url = '/merchant/xy-store/order/order/getattribute';
+        var url = '/merchant/xy-store/order/order/attribute';
     	$.ajax({
     	    async:false,
     		type : 'post',
@@ -207,84 +226,62 @@ $(document).on('change', 'select', function(){
             dataType : 'json',
     		data:{'product_id':number},   //传值到控制器，获取相应数据
     		success : function(data){
-    	        alert (JSON.stringify(data));
-                $("#orderproduct-modelproduct-0-attribute").val(data['attribute']);
-                $("#orderproduct-modelproduct-0-sku_id").val(data['spec_value'][0]);
-                $("#orderproduct-modelproduct-0-spec_value").val(data['spec_value'][1]);
+    	        //alert (JSON.stringify(data['degrees']['id']));
+                $("#order-products-"+sid[2]+"-attribute").val(data['attribute']);
+                for (var i = 0; i < data['degrees'].length; i++) {
+                    $("#order-products-"+sid[2]+"-degrees").append("<option value=" + data['degrees'][i].id + ">" + data['degrees'][i].title + "</option>");
+                }
+                // 缺一不可  
+                $("#order-products-"+sid[2]+"-degrees").selectpicker('refresh');
+                $("#order-products-"+sid[2]+"-degrees").selectpicker('render');
+                for (var i = 0; i < data['astigmia'].length; i++) {
+                    $("#order-products-"+sid[2]+"-astigmia").append("<option value=" + data['astigmia'][i].id + ">" + data['astigmia'][i].title + "</option>");
+                }
+                // 缺一不可  
+                $("#order-products-"+sid[2]+"-astigmia").selectpicker('refresh');
+                $("#order-products-"+sid[2]+"-astigmia").selectpicker('render');
     		},
     	    error: function(XMLHttpRequest, textStatus, errorThrown) {
                                    //alert (errorThrown);
                                   	//alert(XMLHttpRequest.status);
       					},
-    		});
+    	});
     }
-    if(string_id.indexOf("invoiceinfo") != -1){
-        var messagediv = document.getElementById("message-tip");
-        messagediv.innerHTML="";
-       var sid=string_id.split("-");
-       var url = '/backend/yanpei/getgoods';
-       //var url = 'http://localhost/backend/yanpei/getgoods';
-
-    	$.ajax({
-    	    async:false,
-    		type : 'post',
-    		cache:false,
-           url:url,
-           dataType : 'json',
-    		data:{'number':number},   //传值到控制器，获取相应数据
-    		success : function(data){
-                if('0'==data[0]['quantity']){
-                    messagediv.innerHTML="<font color='red'>您选择的商品库存不足！请重新选择。</font>";
-    		    }else{
-                   //var obj = JSON.parse(data);    //解析从控制器传来的数据（此时是数组）
-                   $("#invoiceinfo-invoiceinfo-"+sid[2]+"-name").val(data[0]['name']);
-                   //document.getElementById("invoiceinfo-goodsinfo-"+sid[2]+"-degrees").value = data[0]['degrees'];
-                   //$("#input-degrees").val(obj[0]['degrees']);//解析后的数据相应值放到对应ID的文本框中
-                   $("#invoiceinfo-invoiceinfo-"+sid[2]+"-degrees").val(data[0]['degrees']);
-                    $("#invoiceinfo-invoiceinfo-"+sid[2]+"-astigmia").val(data[0]['astigmia']);
-                    $("#invoiceinfo-invoiceinfo-"+sid[2]+"-price").val(data[0]['saleprice']);
-                }
-    		},
-    	       error: function(XMLHttpRequest, textStatus, errorThrown) {
-                                   //alert (errorThrown);
-                                  	//alert(XMLHttpRequest.status);
-      					},
-    		});
-   }
 });
-
-$("#invoices-total_amount").click(function () {
+ 
+$("#order-order_money").click(function () {
     var toutelamou = 0;
     for (var i = 0; i < 10; i++) {
     //alert($("#invoiceinfo-invoiceinfo-"+i+"-saleprice").val());
-        if($("#invoiceinfo-invoiceinfo-"+i+"-price").length>0){
-           toutelamou += $("#invoiceinfo-invoiceinfo-"+i+"-price").val()*$("#invoiceinfo-invoiceinfo-"+i+"-qty").val();
+        if($("#order-products-"+i+"-price").length>0){
+           toutelamou += $("#order-products-"+i+"-price").val()*$("#order-products-"+i+"-qty").val();
         }
     }
-    //alert(toutelamou);
-    $("#invoices-total_amount").val(toutelamou);
+    $("#order-order_money").val(toutelamou);
    // $("#invoices-rp_amount").val(toutelamou);
 });
-$("#invoices-rp_amount").change(function () {
+$("#order-shipping_money").change(function () {
     var disamount = 0;
     //alert($("#invoices-dis_amount").val());
-           disamount = $("#invoices-total_amount").val()-$("#invoices-rp_amount").val()-$("#invoices-customer_free").val();
+           disamount = parseInt($("#order-order_money").val())+parseInt($("#order-shipping_money").val());
     //alert(toutelamou);
-    $("#invoices-dis_amount").val(disamount);
+    $("#order-pay_money").val(disamount);
 });
-
-$("#invoices-hx_amount").change(function () {
-
-    if($("#invoices-hx_amount").val() == 1){
+$("#order-pay_money").click(function () {
+    var disamount = 0;
+    //alert($("#invoices-dis_amount").val());
+           disamount = parseInt($("#order-order_money").val())+parseInt($("#order-shipping_money").val());
+    //alert(toutelamou);
+    $("#order-pay_money").val(disamount);
+});
+$("#order-user_money").change(function () {
             //var url = 'http://localhost/backend/yanpei/getgoods';
-        var pay_money = document.getElementById("invoices-rp_amount").value;
+        var pay_money = document.getElementById("order-pay_money").value;
         var user_money = document.getElementById("user_money").value;
-        if (user_money == "") user_money = 0;
             if(parseInt(user_money) < parseInt(pay_money)){
                 alert("用户余额不足！");
-                $("#invoices-hx_amount").val('0');
+                $("#order-user_money").val('0');
     		}
-     }
 });
 
         function queryMember() {
@@ -299,17 +296,18 @@ $("#invoices-hx_amount").change(function () {
                 dataType : 'json',
                 data:{'mobile':cardnumber},
                 success: function(ret) {
-                    // alert (JSON.stringify(ret));
-                        //bind data to page
-                        $("#username").html(ret['username']);
-                        $("#user_integral").html(ret['user_integral']);
-                        $("#nickname").html(ret['nickname']);
-                        $("#current_level").html(ret['current_level']);
-                        $("#created_at").html(ret['created_at']);
-                        $("#gender").html(ret['gender']);
-                        $("#arrears").html(ret['arrears']);
-                        $("#user_money").html(ret['user_money']);
-                        $("#mobile").html(ret['mobile']);
+                    // alert (ret['id']);
+                    //bind data to page
+                    $("input[name='buyer']").val(ret['id']);
+                    $("input[name='user_name']").val(ret['username']);
+                    $("input[name='user_integral']").val(ret['user_integral']);
+                    $("input[name='nickname']").val(ret['nickname']);
+                    $("input[name='current_level']").val(ret['current_level']);
+                    $("input[name='created_at']").val(ret['created_at']);
+                    $("input[name='gender']").val(ret['gender']);
+                    $("input[name='mobile']").val(ret['mobile']);
+                    $("input[name='user_money']").val(ret['user_money']);
+                    $("input[name='arrears']").val(ret['arrears']);
                 },
                 error: function() {
                     alert('查询会员信息失败。');
@@ -324,6 +322,39 @@ $("#invoices-hx_amount").change(function () {
         $('#query').click(function() {
             queryMember();
         });
+        
+    // 防止重复提交
+    var submitStatus = true;
+    // 验证并提交表单
+    function beforSubmit() {
+        if (submitStatus === false) {
+          // rfWarning('正在提交中...');
+          // return;
+        }
+
+        // 启用
+        if ($("input[name='buyer']").val() == ''){
+            rfWarning('请搜索新订单的会员信息');
+            return;
+        }
+        submitStatus = false;
+        $.ajax({
+            type : "post",
+            url : "<?= Url::to(['create', 'id' => $model->id]); ?>",
+            dataType : "json",
+            data : data,
+            success: function(data) {
+                submitStatus = true;
+                if (parseInt(data.code) === 200) {
+                    swal("操作成功", "小手一抖就打开了一个框", "success").then((value) => {
+                        window.location = '<?= Url::to(['index']); ?>';
+                    });
+                } else {
+                    rfWarning(data.message);
+                }
+            }
+        });
+    }
 JS;
 $this->registerJs($js);
 ?>
