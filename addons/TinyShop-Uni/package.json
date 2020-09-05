@@ -37,7 +37,7 @@
     "flyio": "^0.6.2",
     "jweixin-module": "^1.4.1",
     "moment": "^2.24.0",
-    "node-sass": "^4.13.0",
+    "node-sass": "^4.13.1",
     "regenerator-runtime": "^0.12.1",
     "sass": "^1.24.0",
     "sass-loader": "^8.0.0",
