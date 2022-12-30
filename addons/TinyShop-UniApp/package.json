@@ -81,7 +81,7 @@
     "husky": "^3.0.0",
     "lint-staged": "^8.0.0",
     "mini-types": "0.0.5",
-    "release-it": "^10.0.0",
+    "release-it": "^15.6.0",
     "miniprogram-api-typings": "^2.9.4",
     "postcss-comment": "^2.0.0",
     "vue-template-compiler": "^2.6.11"
